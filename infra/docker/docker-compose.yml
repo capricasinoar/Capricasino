@@ -1,0 +1,62 @@
+# Stack de desarrollo local (docs/architecture.md Cap. 13.1)
+# docker compose -f infra/docker/docker-compose.yml up
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: capri
+      POSTGRES_PASSWORD: capri_dev # solo dev; producción usa secret manager
+      POSTGRES_DB: capri_casino
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U capri -d capri_casino"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"] # persistencia AOF
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://capri:capri_dev@postgres:5432/capri_casino
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:

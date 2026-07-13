@@ -1,0 +1,527 @@
+// CAPRI CASINO — Esquema de base de datos (docs/architecture.md Cap. 6)
+// Reglas: dinero en BigInt (unidad mínima FUN), timestamptz, ledger append-only.
+// Los CHECK (balance >= 0, amount > 0) se añaden por migración SQL manual:
+//   ALTER TABLE wallets ADD CONSTRAINT cash_non_negative  CHECK (cash_balance >= 0);
+//   ALTER TABLE wallets ADD CONSTRAINT bonus_non_negative CHECK (bonus_balance >= 0);
+//   ALTER TABLE ledger_entries ADD CONSTRAINT amount_positive CHECK (amount > 0);
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Usuarios y sesiones ──────────────────────────────────────────────
+
+enum UserStatus {
+  active
+  suspended
+  self_excluded
+  closed
+}
+
+enum KycStatus {
+  none
+  pending
+  verified
+  rejected
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.Citext
+  username     String     @unique @db.Citext
+  passwordHash String     @map("password_hash")
+  status       UserStatus @default(active)
+  country      String?
+  vipLevel     Int        @default(0) @map("vip_level")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+
+  // 🧩 COSTURA-REAL #2: presentes pero sin uso en play money
+  kycStatus   KycStatus @default(none) @map("kyc_status")
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+
+  wallet              Wallet?
+  sessions            Session[]
+  gameSessions        GameSession[]
+  transactions        Transaction[]
+  bets                Bet[]
+  bonusGrants         BonusGrant[]
+  freeSpinGrants      FreeSpinGrant[]
+  kycRecords          KycRecord[]
+  paymentTransactions PaymentTransaction[]
+  notifications       Notification[]
+  affiliate           Affiliate?           @relation(fields: [affiliateId], references: [id])
+  affiliateId         String?              @map("affiliate_id") @db.Uuid
+
+  @@map("users")
+}
+
+model Wallet {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [id])
+  cashBalance  BigInt   @default(0) @map("cash_balance")
+  bonusBalance BigInt   @default(0) @map("bonus_balance")
+  currency     String   @default("FUN")
+  version      Int      @default(0)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("wallets")
+}
+
+model Session {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  user             User     @relation(fields: [userId], references: [id])
+  refreshTokenHash String   @map("refresh_token_hash")
+  userAgent        String?  @map("user_agent")
+  ip               String?  @db.Inet
+  expiresAt        DateTime @map("expires_at") @db.Timestamptz()
+  revoked          Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ── Wallet / Ledger (núcleo económico) ───────────────────────────────
+
+enum TransactionType {
+  bet
+  win
+  rollback
+  deposit
+  withdrawal
+  bonus_grant
+  cashback
+  adjustment
+}
+
+enum TransactionStatus {
+  pending
+  completed
+  reversed
+}
+
+model Transaction {
+  id           String            @id @default(uuid()) @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  user         User              @relation(fields: [userId], references: [id])
+  type         TransactionType
+  providerTxId String?           @map("provider_tx_id")
+  providerId   String?           @map("provider_id") @db.Uuid
+  provider     Provider?         @relation(fields: [providerId], references: [id])
+  roundId      String?           @map("round_id") @db.Uuid
+  round        Round?            @relation(fields: [roundId], references: [id])
+  amount       BigInt
+  status       TransactionStatus @default(completed)
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+
+  ledgerEntries LedgerEntry[]
+
+  // ⚠️ Idempotencia (TRAMPA #1): un reintento con el mismo provider_tx_id
+  // viola esta constraint → se devuelve el resultado previo sin re-procesar.
+  @@unique([providerId, providerTxId])
+  @@index([userId, createdAt])
+  @@map("transactions")
+}
+
+enum EntryDirection {
+  debit
+  credit
+}
+
+model LedgerEntry {
+  id            String         @id @default(uuid()) @db.Uuid
+  transactionId String         @map("transaction_id") @db.Uuid
+  transaction   Transaction    @relation(fields: [transactionId], references: [id])
+  account       String // 'player:{uuid}:cash' | 'player:{uuid}:bonus' | 'house:wagering' | ...
+  direction     EntryDirection
+  amount        BigInt // CHECK (amount > 0) por migración SQL
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+
+  // INVARIANTE (validada en app + tests): por transactionId, Σdebit = Σcredit
+  @@index([account, createdAt])
+  @@map("ledger_entries")
+}
+
+// ── Proveedores y catálogo ───────────────────────────────────────────
+
+enum ProviderType {
+  direct
+  aggregator
+  simulated
+}
+
+enum ProviderStatus {
+  active
+  disabled
+}
+
+model Provider {
+  id     String         @id @default(uuid()) @db.Uuid
+  code   String         @unique // 'sim' hoy; 'pragmatic', 'hub88'... mañana (🧩 COSTURA-REAL #3)
+  name   String
+  type   ProviderType
+  status ProviderStatus @default(active)
+  config Json? // credenciales/endpoints — cifrado a nivel app (Cap. 8.7)
+
+  games        Game[]
+  jackpots     Jackpot[]
+  transactions Transaction[]
+
+  @@map("providers")
+}
+
+enum GameType {
+  slot
+  live
+  crash
+  table
+  instant
+  original
+}
+
+enum Volatility {
+  low
+  medium
+  high
+}
+
+model Game {
+  id           String      @id @default(uuid()) @db.Uuid
+  providerId   String      @map("provider_id") @db.Uuid
+  provider     Provider    @relation(fields: [providerId], references: [id])
+  code         String
+  name         String
+  slug         String      @unique
+  type         GameType
+  rtp          Decimal?    @db.Decimal(5, 2)
+  volatility   Volatility?
+  thumbnailUrl String?     @map("thumbnail_url")
+  isActive     Boolean     @default(true) @map("is_active")
+  isFeatured   Boolean     @default(false) @map("is_featured")
+  releaseDate  DateTime?   @map("release_date") @db.Date
+  sortOrder    Int         @default(0) @map("sort_order")
+
+  categories     GameCategory[]
+  gameSessions   GameSession[]
+  freeSpinGrants FreeSpinGrant[]
+
+  @@unique([providerId, code])
+  @@map("games")
+}
+
+model Category {
+  id    String         @id @default(uuid()) @db.Uuid
+  slug  String         @unique // slots, live, crash, originals, nuevos, populares
+  name  String
+  games GameCategory[]
+
+  @@map("categories")
+}
+
+model GameCategory {
+  gameId     String   @map("game_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  game       Game     @relation(fields: [gameId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([gameId, categoryId])
+  @@map("game_categories")
+}
+
+// ── Sesiones de juego, rondas y apuestas ─────────────────────────────
+
+enum GameSessionStatus {
+  open
+  closed
+}
+
+model GameSession {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  user        User              @relation(fields: [userId], references: [id])
+  gameId      String            @map("game_id") @db.Uuid
+  game        Game              @relation(fields: [gameId], references: [id])
+  launchToken String            @unique @map("launch_token") // player_token de los callbacks
+  status      GameSessionStatus @default(open)
+  startedAt   DateTime          @default(now()) @map("started_at") @db.Timestamptz()
+  endedAt     DateTime?         @map("ended_at") @db.Timestamptz()
+
+  rounds Round[]
+
+  @@index([userId])
+  @@map("game_sessions")
+}
+
+enum RoundStatus {
+  open
+  settled
+  cancelled
+}
+
+model Round {
+  id              String      @id @default(uuid()) @db.Uuid
+  gameSessionId   String      @map("game_session_id") @db.Uuid
+  gameSession     GameSession @relation(fields: [gameSessionId], references: [id])
+  providerRoundId String      @map("provider_round_id")
+  status          RoundStatus @default(open)
+  totalBet        BigInt      @default(0) @map("total_bet")
+  totalWin        BigInt      @default(0) @map("total_win")
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  settledAt       DateTime?   @map("settled_at") @db.Timestamptz()
+
+  bets         Bet[]
+  transactions Transaction[]
+
+  @@unique([gameSessionId, providerRoundId])
+  @@map("rounds")
+}
+
+enum BetStatus {
+  placed
+  won
+  lost
+  cancelled
+}
+
+model Bet {
+  id         String    @id @default(uuid()) @db.Uuid
+  roundId    String    @map("round_id") @db.Uuid
+  round      Round     @relation(fields: [roundId], references: [id])
+  userId     String    @map("user_id") @db.Uuid
+  user       User      @relation(fields: [userId], references: [id])
+  amount     BigInt
+  winAmount  BigInt    @default(0) @map("win_amount")
+  status     BetStatus @default(placed)
+  resultData Json?     @map("result_data") // símbolos, multiplicador, seed provably-fair
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId, createdAt])
+  @@map("bets")
+}
+
+// ── Bonos, free spins, jackpots ──────────────────────────────────────
+
+enum BonusType {
+  deposit_match
+  free_spins
+  cashback
+  no_deposit
+}
+
+enum CampaignStatus {
+  active
+  paused
+  ended
+}
+
+model BonusCampaign {
+  id                 String         @id @default(uuid()) @db.Uuid
+  code               String         @unique
+  name               String
+  type               BonusType
+  amount             BigInt?
+  percentage         Decimal?       @db.Decimal(5, 2)
+  wageringMultiplier Int            @map("wagering_multiplier") // rollover, ej 30x
+  gameContribution   Json?          @map("game_contribution") // {slot:100, table:10, live:10}
+  validFrom          DateTime?      @map("valid_from") @db.Timestamptz()
+  validTo            DateTime?      @map("valid_to") @db.Timestamptz()
+  status             CampaignStatus @default(active)
+
+  grants BonusGrant[]
+
+  @@map("bonus_campaigns")
+}
+
+enum GrantStatus {
+  active
+  completed
+  expired
+  forfeited
+}
+
+model BonusGrant {
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String        @map("user_id") @db.Uuid
+  user             User          @relation(fields: [userId], references: [id])
+  campaignId       String        @map("campaign_id") @db.Uuid
+  campaign         BonusCampaign @relation(fields: [campaignId], references: [id])
+  amount           BigInt
+  wageringTarget   BigInt        @map("wagering_target")
+  wageringProgress BigInt        @default(0) @map("wagering_progress")
+  status           GrantStatus   @default(active)
+  expiresAt        DateTime?     @map("expires_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@map("bonus_grants")
+}
+
+enum FreeSpinStatus {
+  active
+  completed
+  expired
+}
+
+model FreeSpinGrant {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @map("user_id") @db.Uuid
+  user       User           @relation(fields: [userId], references: [id])
+  gameId     String         @map("game_id") @db.Uuid
+  game       Game           @relation(fields: [gameId], references: [id])
+  spinsTotal Int            @map("spins_total")
+  spinsUsed  Int            @default(0) @map("spins_used")
+  spinValue  BigInt         @map("spin_value")
+  status     FreeSpinStatus @default(active)
+  expiresAt  DateTime?      @map("expires_at") @db.Timestamptz()
+
+  @@map("free_spin_grants")
+}
+
+enum JackpotType {
+  fixed
+  progressive
+}
+
+model Jackpot {
+  id            String      @id @default(uuid()) @db.Uuid
+  providerId    String?     @map("provider_id") @db.Uuid
+  provider      Provider?   @relation(fields: [providerId], references: [id])
+  name          String
+  type          JackpotType
+  currentAmount BigInt      @map("current_amount")
+  seedAmount    BigInt      @map("seed_amount")
+  lastWonAt     DateTime?   @map("last_won_at") @db.Timestamptz()
+  lastWonBy     String?     @map("last_won_by") @db.Uuid
+
+  @@map("jackpots")
+}
+
+// ── Pagos y KYC (🧩 fake/stub en play money) ─────────────────────────
+
+enum PaymentType {
+  deposit
+  withdrawal
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+}
+
+model PaymentTransaction {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  user      User          @relation(fields: [userId], references: [id])
+  type      PaymentType
+  amount    BigInt
+  method    String        @default("fake") // 🧩 mañana: 'card' | 'crypto' | 'transfer'
+  status    PaymentStatus @default(completed)
+  pspRef    String?       @map("psp_ref") // 🧩 referencia del PSP real
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId, createdAt])
+  @@map("payment_transactions")
+}
+
+model KycRecord {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  user         User      @relation(fields: [userId], references: [id])
+  documentType String    @map("document_type")
+  documentRef  String    @map("document_ref")
+  status       KycStatus @default(pending)
+  reviewedBy   String?   @map("reviewed_by") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz()
+
+  @@map("kyc_records")
+}
+
+// ── Operación: notificaciones, admin, auditoría, settings, eventos ───
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  payload   Json?
+  readAt    DateTime? @map("read_at") @db.Timestamptz()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+// Separación deliberada de users (Cap. 6.3): los admins NO son players con flag.
+enum AdminRole {
+  support
+  risk
+  finance
+  super_admin
+}
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique @db.Citext
+  passwordHash String    @map("password_hash")
+  role         AdminRole
+  totpSecret   String?   @map("totp_secret") // 2FA obligatorio para admins
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  auditLogs AuditLog[]
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String?   @map("admin_user_id") @db.Uuid
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+  action      String // 'user.adjust_balance', 'withdrawal.approve', ...
+  targetType  String?   @map("target_type")
+  targetId    String?   @map("target_id")
+  before      Json?
+  after       Json?
+  ip          String?   @db.Inet
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Affiliate {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  users User[]
+
+  @@map("affiliates")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("settings")
+}
+
+// Event log para analytics / event sourcing ligero de dominio (append-only)
+model Event {
+  id        String   @id @default(uuid()) @db.Uuid
+  type      String // 'balance.changed', 'bonus.granted', ...
+  payload   Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([type, createdAt])
+  @@map("events")
+}

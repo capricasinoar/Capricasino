@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/* ── Design tokens CAPRI CASINO ─────────────────────────────────────
+   Lujo mediterráneo oscuro: medianoche + oro + azul Grotta Azzurra.
+   Tema oscuro único (decisión de marca, estilo casino premium). */
+@theme {
+  --color-night: #080b14; /* fondo base */
+  --color-surface: #0e1422; /* paneles */
+  --color-card: #141c30; /* tarjetas */
+  --color-card-hover: #1a2440;
+  --color-line: #202b49; /* bordes */
+
+  --color-gold: #d4af37;
+  --color-gold-bright: #ecc960;
+  --color-gold-dim: #8c7325;
+
+  --color-azure: #38b6da; /* azul Capri */
+  --color-azure-deep: #0f6a8b;
+
+  --color-ink: #f2efe6; /* texto principal, blanco cálido */
+  --color-ink-soft: #b8bfd4;
+  --color-ink-mute: #7c86a3;
+
+  --color-win: #3ddc97;
+  --color-danger: #e5484d;
+
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-inter);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+
+/* Texto dorado degradado para titulares */
+.text-gold-gradient {
+  background: linear-gradient(120deg, #f3dd8e 0%, #d4af37 45%, #a8842a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Panel "glass" sutil */
+.glass {
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
+}
+
+/* Halo decorativo del hero */
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
