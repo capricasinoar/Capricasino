@@ -5,7 +5,7 @@ Cada módulo es una rebanada vertical (controller · service · dto · ports · 
 | Módulo | Semana | Contenido previsto (docs/architecture.md) |
 |---|---|---|
 | `health` | 0 ✅ | Liveness/readiness |
-| `auth` | 1 | Registro, login, JWT corto + refresh rotativo (cookie httpOnly), sesiones revocables, RBAC, 2FA |
+| `auth` | 1 ✅ | Registro, login, JWT corto + refresh rotativo (cookie httpOnly), sesiones revocables. Pendiente: RBAC admin, 2FA, rate limit (S9-S10) |
 | `wallet` | 2 | **El núcleo.** Ledger doble entrada, idempotencia (`provider_tx_id` UNIQUE), `FOR UPDATE`, CHECK saldo≥0, buckets cash/bonus. TDD con tests de concurrencia |
 | `provider` | 3 | Puerto `GameProviderPort` + adapter `sim` (callbacks HMAC, launch, rondas, reconciliación). El "modo caos" vive en `packages/provider-sim` |
 | `games` | 4 | Catálogo, categorías, favoritos, recientes, launch |

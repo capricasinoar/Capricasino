@@ -1,3 +1,13 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# pnpm ≥10: los paquetes con scripts de build permitidos se declaran aquí
+onlyBuiltDependencies:
+  - argon2
+  - esbuild
+  - sharp
+  - prisma
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "@swc/core"

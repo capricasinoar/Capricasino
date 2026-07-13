@@ -1,9 +1,11 @@
 import { Module } from "@nestjs/common";
 import { HealthModule } from "./modules/health/health.module";
+import { PrismaModule } from "./modules/prisma/prisma.module";
+import { AuthModule } from "./modules/auth/auth.module";
 
 // Monolito modular: cada módulo es una rebanada vertical con frontera estricta.
-// Se irán sumando según el roadmap: auth (S1), wallet (S2), provider (S3), games (S4)...
+// Roadmap: auth (S1 ✅), wallet (S2), provider (S3), games (S4)...
 @Module({
-  imports: [HealthModule],
+  imports: [PrismaModule, HealthModule, AuthModule],
 })
 export class AppModule {}

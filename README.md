@@ -39,7 +39,7 @@ docker compose -f infra/docker/docker-compose.yml up
 
 - ✅ **Semana 0 — Fundaciones:** monorepo, configs, esquema Prisma, docker-compose, CI, CLAUDE.md
 - ✅ **Extra:** landing pública + lobby demo con catálogo mock
-- ⏳ Semana 1 — Auth + usuarios
+- ✅ **Semana 1 — Auth + usuarios:** registro, login, JWT + refresh rotativo con detección de reuso, 8 tests de integración
 - ⏳ Semana 2 — Wallet + Ledger (núcleo; TDD obligatorio)
 - ⏳ Semana 3 — Provider-sim + callbacks HMAC + modo caos
 - ⏳ Semanas 4–12 — catálogo real, real-time, bonos, pagos fake, admin, seguridad, deploy
