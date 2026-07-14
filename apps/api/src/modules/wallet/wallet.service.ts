@@ -2,9 +2,17 @@
 // REGLAS: nadie más escribe saldo; todo movimiento = transacción + asientos de
 // doble entrada (suma cero) en la MISMA transacción de DB; ledger append-only;
 // idempotencia por (provider, providerTxId); dinero en BigInt.
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Prisma, TransactionType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+
+// Evento de dominio que dispara el push de saldo por WebSocket (Cap. 9.3).
+export const BALANCE_CHANGED = "balance.changed";
+export interface BalanceChangedEvent {
+  userId: string;
+  cash: bigint;
+}
 
 export type WalletErrorCode =
   | "INSUFFICIENT_FUNDS"
@@ -59,7 +67,11 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 
 @Injectable()
 export class WalletService {
-  constructor(private readonly prisma: PrismaService) {}
+  // events es opcional: en tests se instancia `new WalletService(prisma)` sin bus.
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly events?: EventEmitter2,
+  ) {}
 
   async getBalance(userId: string): Promise<{ cash: bigint; bonus: bigint; total: bigint }> {
     const w = await this.prisma.wallet.findUnique({ where: { userId } });
@@ -188,7 +200,7 @@ export class WalletService {
     const provider = await this.providerByCode(p.providerCode);
 
     try {
-      return await withRetry(() =>
+      const result = await withRetry(() =>
         this.prisma.$transaction(async (tx) => {
           // 1. Insert de la transacción PRIMERO: la UNIQUE (provider, providerTxId)
           //    es la idempotencia atómica (TRAMPA #18: nunca check-then-insert).
@@ -236,6 +248,12 @@ export class WalletService {
           return { transactionId: created.id, providerTxId: p.providerTxId, balance: newBalance, replayed: false };
         }),
       );
+
+      // El saldo cambió y quedó commiteado → notificar (push por WebSocket).
+      // El WS solo AVISA; la verdad es la DB (TRAMPA #11), por eso emitimos
+      // después del COMMIT, nunca dentro de la transacción.
+      this.events?.emit(BALANCE_CHANGED, { userId: p.userId, cash: result.balance } satisfies BalanceChangedEvent);
+      return result;
     } catch (e) {
       // Reintento del proveedor: misma UNIQUE → devolver EXACTAMENTE el resultado
       // original sin volver a mover saldo (TRAMPA #1/#2).

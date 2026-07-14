@@ -46,7 +46,8 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Semana 3 — Provider-sim + Dice jugable:** proveedor simulado con protocolo seamless-wallet HMAC, RNG provably fair, callbacks bet/win/rollback, modo caos. Capri Dice apuesta de verdad contra el wallet desde el navegador. 11 tests de resiliencia (32 total)
 - ✅ **Panel de administración (adelantado de S9):** `apps/admin` con auth separada, dashboard (KPIs, GGR), lista de clientes, ficha con ledger completo, carga/retirada auditada, visor de auditoría
 - ✅ **Semana 4 — Catálogo agnóstico de proveedor:** catálogo servido desde la DB con forma de agregador (`GET /games`), `ProviderRegistry` que despacha el launch por proveedor, `playable` derivado del registro. Lobby consumiendo la API. Costura lista para enchufar un agregador (Realist/Hub88) como seed + adapter
-- ⏳ Siguiente — juego responsable + reporting (costuras regulatorias), o saldo en tiempo real
+- ✅ **Semana 6 — Saldo en tiempo real:** WebSocket (Socket.IO) con auth JWT, el saldo se actualiza solo tras cada apuesta/premio (evento `balance.changed`), resync REST al reconectar. La cabecera destella al cambiar
+- ⏳ Siguiente — juego responsable + reporting (costuras regulatorias)
 
 ## Acceso al panel de administración
 

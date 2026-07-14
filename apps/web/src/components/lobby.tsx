@@ -4,7 +4,7 @@
 // categorías y qué juego es "jugable" vienen del backend. El día que se enchufe
 // un agregador, su catálogo aparece aquí sin tocar este componente.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { fetchCatalog, fetchCategories, type CatalogGame, type Category } from "@/lib/catalog";
 import { GameCard } from "./game-card";
@@ -23,6 +23,33 @@ const FIXED_CATEGORIES: { slug: string; name: string }[] = [
 
 function formatFun(cents: number) {
   return new Intl.NumberFormat("es-ES").format(Math.floor(cents / 100));
+}
+
+// Píldora de saldo que destella (verde sube, rojo baja) cuando el WS empuja
+// un saldo nuevo — feedback visual de que la actualización es en vivo.
+function BalancePill({ cash }: { cash: number }) {
+  const prev = useRef(cash);
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+
+  useEffect(() => {
+    if (cash === prev.current) return;
+    setFlash(cash > prev.current ? "up" : "down");
+    prev.current = cash;
+    const t = setTimeout(() => setFlash(null), 700);
+    return () => clearTimeout(t);
+  }, [cash]);
+
+  const flashClass = flash === "up" ? "border-win/70 bg-win/20" : flash === "down" ? "border-danger/60 bg-danger/15" : "border-gold/35 bg-gold/10";
+
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold text-gold-bright transition-colors duration-300 ${flashClass}`}
+      title="Saldo en tiempo real"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-win" aria-hidden />
+      {formatFun(cash)} <span className="text-[0.65rem] font-bold">FUN</span>
+    </div>
+  );
 }
 
 export function Lobby() {
@@ -101,9 +128,7 @@ export function Lobby() {
           <div className="flex shrink-0 items-center gap-2">
             {player.user ? (
               <>
-                <div className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-sm font-semibold text-gold-bright">
-                  {formatFun(player.cash)} <span className="text-[0.65rem] font-bold">FUN</span>
-                </div>
+                <BalancePill cash={player.cash} />
                 <button
                   type="button"
                   onClick={() => session.logout()}

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { RequestMethod } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { IoAdapter } from "@nestjs/platform-socket.io";
 import fastifyCookie from "@fastify/cookie";
 import { AppModule } from "./app.module";
 
@@ -11,6 +12,8 @@ export async function createApp(): Promise<NestFastifyApplication> {
     logger: process.env.NODE_ENV === "test" ? false : ["log", "warn", "error"],
   });
   await app.register(fastifyCookie);
+  // Socket.IO para el saldo en tiempo real (Cap. 9), sobre el mismo servidor HTTP.
+  app.useWebSocketAdapter(new IoAdapter(app));
   // Fuera de /api/v1: el callback del proveedor (server-to-server, Cap. 7.5) y
   // TODO el panel admin (app + auth separadas, Cap. 10) que cuelga de /admin/v1.
   app.setGlobalPrefix("api/v1", {
