@@ -11,6 +11,7 @@ import { PaymentsModule } from "./modules/payments/payments.module";
 import { ProviderModule } from "./modules/provider/provider.module";
 import { GamesModule } from "./modules/games/games.module";
 import { ResponsibleModule } from "./modules/responsible/responsible.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { AdminModule } from "./modules/admin/admin.module";
 
 // Monolito modular: cada módulo es una rebanada vertical con frontera estricta.
@@ -30,6 +31,7 @@ import { AdminModule } from "./modules/admin/admin.module";
     ProviderModule,
     GamesModule,
     ResponsibleModule,
+    NotificationsModule,
     RealtimeModule,
     AdminModule,
   ],

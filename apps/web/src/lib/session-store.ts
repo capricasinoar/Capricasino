@@ -10,10 +10,11 @@ export interface PlayerSession {
   user: { id: string; username: string; vipLevel: number } | null;
   cash: number;
   bonus: number;
+  unread: number; // notificaciones sin leer
   ready: boolean; // true tras el primer intento de refresh
 }
 
-let state: PlayerSession = { user: null, cash: 0, bonus: 0, ready: false };
+let state: PlayerSession = { user: null, cash: 0, bonus: 0, unread: 0, ready: false };
 const listeners = new Set<() => void>();
 
 function set(patch: Partial<PlayerSession>) {
@@ -63,17 +64,35 @@ export const session = {
     disconnectRealtime();
     await api.logout().catch(() => undefined);
     setAccessToken(null);
-    set({ user: null, cash: 0, bonus: 0 });
+    set({ user: null, cash: 0, bonus: 0, unread: 0 });
   },
 
-  // Abre el WebSocket: el saldo se actualizará solo tras cada apuesta/premio.
+  // Abre el WebSocket: saldo y notificaciones se actualizan solos.
   openRealtime() {
     const token = getAccessToken();
     if (!token) return;
     connectRealtime(token, {
       onBalance: (b) => set({ cash: b.cash, bonus: b.bonus }),
-      onReconnect: () => this.refreshBalance(), // resync por REST al reconectar
+      onNotification: (n) => set({ unread: n.unread }),
+      onReconnect: () => {
+        this.refreshBalance();
+        this.refreshUnread();
+      },
     });
+    this.refreshUnread();
+  },
+
+  async refreshUnread() {
+    try {
+      const page = await api.notifications();
+      set({ unread: page.unread });
+    } catch {
+      /* silencioso */
+    }
+  },
+
+  setUnread(n: number) {
+    set({ unread: n });
   },
 
   async refreshBalance() {

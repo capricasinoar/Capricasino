@@ -57,6 +57,22 @@ export const api = {
       body: JSON.stringify({ gameId }),
     }),
 
+  // Historial de movimientos (group: "money" | "game" | undefined=todos)
+  transactions: (group?: "money" | "game", cursor?: string) => {
+    const qs = new URLSearchParams();
+    if (group) qs.set("group", group);
+    if (cursor) qs.set("cursor", cursor);
+    const q = qs.toString();
+    return request<TxPage>(`/wallet/transactions${q ? `?${q}` : ""}`);
+  },
+
+  // Notificaciones
+  notifications: (cursor?: string) =>
+    request<NotificationsPage>(`/notifications${cursor ? `?cursor=${cursor}` : ""}`),
+  markNotificationsRead: (ids: string[]) =>
+    request<{ unread: number }>("/notifications/read", { method: "POST", body: JSON.stringify({ ids }) }),
+  markAllNotificationsRead: () => request<{ unread: number }>("/notifications/read-all", { method: "POST" }),
+
   // Juego responsable (del propio jugador)
   rgStatus: () => request<RgStatus>("/responsible-gaming/status"),
   rgSetLimit: (kind: RgLimitKind, value: number) =>
@@ -66,6 +82,31 @@ export const api = {
   rgSelfExclude: (days: number | null, reason?: string) =>
     request<{ ok: boolean }>("/responsible-gaming/self-exclude", { method: "POST", body: JSON.stringify({ days, reason }) }),
 };
+
+export interface TxRow {
+  id: string;
+  type: string;
+  amount: number;
+  balanceAfter: number | null;
+  status: string;
+  createdAt: string;
+}
+export interface TxPage {
+  items: TxRow[];
+  nextCursor: string | null;
+}
+export interface NotificationRow {
+  id: string;
+  type: string;
+  payload: { amount?: number; reason?: string | null; balanceAfter?: number; until?: string | null } | null;
+  read: boolean;
+  createdAt: string;
+}
+export interface NotificationsPage {
+  items: NotificationRow[];
+  nextCursor: string | null;
+  unread: number;
+}
 
 export type RgLimitKind = "daily_wager" | "daily_loss" | "session_reminder";
 export interface RgStatus {

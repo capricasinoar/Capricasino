@@ -7,9 +7,10 @@
 //   2. payment_transactions (el "recibo" del movimiento)
 //   3. audit_logs (quién lo hizo, a quién, saldo antes/después, razón)
 import { randomUUID } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { WalletService, WalletError } from "../wallet/wallet.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 export const HOUSE_PROVIDER = "house"; // provider interno para operaciones manuales
 
@@ -25,6 +26,8 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly wallet: WalletService,
+    // Opcional: los tests instancian PaymentsService sin notificaciones.
+    @Optional() private readonly notifications?: NotificationsService,
   ) {}
 
   async manualDeposit(p: {
@@ -112,6 +115,13 @@ export class PaymentsService {
         before: { cash: before.cash.toString() },
         after: { cash: op.balance.toString(), amount: p.amount.toString(), reason: p.reason ?? null },
       },
+    });
+
+    // 4. Notificación al jugador (se empuja en vivo por WebSocket).
+    await this.notifications?.create(p.userId, p.kind, {
+      amount: Number(p.amount),
+      reason: p.reason ?? null,
+      balanceAfter: Number(op.balance),
     });
 
     return {

@@ -12,6 +12,8 @@ import { Logo } from "./logo";
 import { AuthModal } from "./auth-modal";
 import { GameFrame } from "./game-frame";
 import { ResponsibleModal } from "./responsible-modal";
+import { NotificationsBell } from "./notifications-bell";
+import { HistoryModal } from "./history-modal";
 import { session, usePlayerSession } from "@/lib/session-store";
 
 const FIXED_CATEGORIES: { slug: string; name: string }[] = [
@@ -65,6 +67,7 @@ export function Lobby() {
   const [playing, setPlaying] = useState<CatalogGame | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [rgOpen, setRgOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     session.bootstrap();
@@ -131,6 +134,15 @@ export function Lobby() {
             {player.user ? (
               <>
                 <BalancePill cash={player.cash} />
+                <NotificationsBell />
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(true)}
+                  className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
+                  title="Historial de movimientos"
+                >
+                  Historial
+                </button>
                 <button
                   type="button"
                   onClick={() => setRgOpen(true)}
@@ -276,6 +288,7 @@ export function Lobby() {
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {rgOpen && <ResponsibleModal onClose={() => setRgOpen(false)} />}
+      {historyOpen && <HistoryModal onClose={() => setHistoryOpen(false)} />}
       {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
 
       {info && (

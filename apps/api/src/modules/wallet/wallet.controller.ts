@@ -1,4 +1,5 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
+import { TransactionType } from "@prisma/client";
 import { JwtAuthGuard, CurrentUser, type JwtPayload } from "../auth/jwt-auth.guard";
 import { PrismaService } from "../prisma/prisma.service";
 import { WalletService } from "./wallet.service";
@@ -19,15 +20,21 @@ export class WalletController {
   }
 
   // Historial: el cliente ve TODAS sus cargas, retiradas, apuestas y premios.
+  // `group=money` (cargas/retiros/ajustes) o `group=game` (apuestas/premios).
   @Get("transactions")
   async transactions(
     @CurrentUser() user: JwtPayload,
     @Query("cursor") cursor?: string,
     @Query("limit") limit?: string,
+    @Query("group") group?: string,
   ) {
     const take = Math.min(Number(limit ?? 20), 100);
+    const moneyTypes: TransactionType[] = ["deposit", "withdrawal", "adjustment", "cashback", "bonus_grant"];
+    const gameTypes: TransactionType[] = ["bet", "win", "rollback"];
+    const typeFilter =
+      group === "money" ? { type: { in: moneyTypes } } : group === "game" ? { type: { in: gameTypes } } : {};
     const items = await this.prisma.transaction.findMany({
-      where: { userId: user.sub },
+      where: { userId: user.sub, ...typeFilter },
       orderBy: { createdAt: "desc" },
       take: take + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),

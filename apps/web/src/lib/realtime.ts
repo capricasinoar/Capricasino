@@ -12,6 +12,7 @@ let socket: Socket | null = null;
 
 export interface RealtimeHandlers {
   onBalance: (b: { cash: number; bonus: number; total: number }) => void;
+  onNotification: (n: { unread: number }) => void;
   onReconnect: () => void; // para resync por REST
 }
 
@@ -24,6 +25,7 @@ export function connectRealtime(token: string, handlers: RealtimeHandlers) {
     reconnectionDelay: 500,
   });
   socket.on("balance", handlers.onBalance);
+  socket.on("notification", handlers.onNotification);
   socket.io.on("reconnect", handlers.onReconnect);
   return socket;
 }

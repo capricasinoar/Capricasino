@@ -14,6 +14,7 @@ import {
 } from "@nestjs/websockets";
 import type { Server, Socket } from "socket.io";
 import { WalletService, BALANCE_CHANGED, type BalanceChangedEvent } from "../wallet/wallet.service";
+import { NotificationsService, NOTIFICATION_CREATED, type NotificationCreatedEvent } from "../notifications/notifications.service";
 
 @WebSocketGateway({
   cors: { origin: [process.env.WEB_ORIGIN ?? "http://localhost:3000"], credentials: true },
@@ -27,6 +28,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   constructor(
     private readonly jwt: JwtService,
     private readonly wallet: WalletService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -54,5 +56,12 @@ export class RealtimeGateway implements OnGatewayConnection {
       bonus: Number(b.bonus),
       total: Number(b.total),
     });
+  }
+
+  @OnEvent(NOTIFICATION_CREATED)
+  async onNotification(event: NotificationCreatedEvent) {
+    // Empuja el contador de no leídas; el cliente refresca el listado al abrir.
+    const unread = await this.notifications.unreadCount(event.userId);
+    this.server.to(`user:${event.userId}`).emit("notification", { unread });
   }
 }

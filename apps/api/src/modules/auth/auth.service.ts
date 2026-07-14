@@ -1,10 +1,11 @@
 import { createHash, randomBytes } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as argon2 from "argon2";
 import type { RegisterRequest, LoginRequest } from "@capri/contracts";
 import { PrismaService } from "../prisma/prisma.service";
 import { apiError } from "../../shared/api-error";
+import { NotificationsService } from "../notifications/notifications.service";
 
 export interface AuthTokens {
   user: { id: string; username: string; vipLevel: number };
@@ -27,6 +28,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    @Optional() private readonly notifications?: NotificationsService,
   ) {}
 
   async register(data: RegisterRequest, meta: { ip?: string; userAgent?: string }): Promise<AuthTokens> {
@@ -43,6 +45,7 @@ export class AuthService {
         await tx.wallet.create({ data: { userId: created.id } });
         return created;
       });
+      await this.notifications?.create(user.id, "welcome", {});
       return this.issueTokens(user, meta);
     } catch (e: unknown) {
       // Violación de UNIQUE (email o username ya existen).

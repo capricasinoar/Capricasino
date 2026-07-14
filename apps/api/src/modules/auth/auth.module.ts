@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
+import { NotificationsModule } from "../notifications/notifications.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./jwt-auth.guard";
@@ -12,6 +13,7 @@ import { JwtAuthGuard } from "./jwt-auth.guard";
       // y será rotable con `kid` (Cap. 8.7).
       secret: process.env.JWT_SECRET ?? "capri-dev-secret-cambiar-en-produccion",
     }),
+    NotificationsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard],
