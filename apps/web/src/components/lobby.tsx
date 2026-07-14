@@ -1,24 +1,36 @@
 "use client";
 
-// Lobby demo con catálogo mock (src/lib/games.ts) y saldo ficticio local.
-// Semana 4+: catálogo desde GET /api/v1/games; saldo real desde el wallet vía WS.
+// Lobby conectado al backend: saldo real del wallet, login/registro, y lanzamiento
+// de juegos reales contra el provider-sim (hoy: Dice). El catálogo sigue siendo
+// mock (src/lib/games.ts) hasta la Semana 4; los juegos sin backend muestran aviso.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, GAMES, gamesByCategory, type CategorySlug, type MockGame } from "@/lib/games";
 import { GameCard } from "./game-card";
 import { Logo } from "./logo";
+import { AuthModal } from "./auth-modal";
+import { GameFrame } from "./game-frame";
+import { session, usePlayerSession } from "@/lib/session-store";
 
-const WELCOME_FUN = 100_000;
+// Juegos con backend real disponible hoy (Semana 3). El resto = aviso "pronto".
+const PLAYABLE = new Set(["dice"]);
 
-function formatFun(n: number) {
-  return new Intl.NumberFormat("es-ES").format(n);
+function formatFun(cents: number) {
+  return new Intl.NumberFormat("es-ES", { minimumFractionDigits: 0 }).format(Math.floor(cents / 100));
 }
 
 export function Lobby() {
+  const player = usePlayerSession();
   const [category, setCategory] = useState<CategorySlug>("todos");
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<MockGame | null>(null);
+  const [info, setInfo] = useState<MockGame | null>(null); // modal informativo
+  const [playing, setPlaying] = useState<MockGame | null>(null); // iframe de juego
+  const [authOpen, setAuthOpen] = useState(false);
+
+  useEffect(() => {
+    session.bootstrap(); // intenta refrescar sesión con la cookie
+  }, []);
 
   const games = useMemo(() => {
     const base = gamesByCategory(category);
@@ -27,6 +39,18 @@ export function Lobby() {
   }, [category, query]);
 
   const featured = GAMES.filter((g) => g.featured);
+
+  function onPlay(game: MockGame) {
+    if (game.badge === "PRONTO" || !PLAYABLE.has(game.slug)) {
+      setInfo(game);
+      return;
+    }
+    if (!player.user) {
+      setAuthOpen(true);
+      return;
+    }
+    setPlaying(game);
+  }
 
   return (
     <div className="min-h-dvh pb-16 md:pb-0">
@@ -59,18 +83,31 @@ export function Lobby() {
             />
           </div>
 
-          {/* saldo ficticio */}
+          {/* saldo / sesión */}
           <div className="flex shrink-0 items-center gap-2">
-            <div className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-sm font-semibold text-gold-bright">
-              {formatFun(WELCOME_FUN)} <span className="text-[0.65rem] font-bold">FUN</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelected({ name: "Depósitos", slug: "__deposit", provider: "", type: "original", icon: "coin", gradient: "" })}
-              className="hidden cursor-pointer rounded-full bg-gold px-4 py-2 text-sm font-bold text-night transition-colors duration-200 hover:bg-gold-bright md:block"
-            >
-              Recargar
-            </button>
+            {player.user ? (
+              <>
+                <div className="rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-sm font-semibold text-gold-bright">
+                  {formatFun(player.cash)} <span className="text-[0.65rem] font-bold">FUN</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => session.logout()}
+                  className="hidden cursor-pointer rounded-full border border-line px-4 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink md:block"
+                  title={`Sesión de ${player.user.username}`}
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAuthOpen(true)}
+                className="cursor-pointer rounded-full bg-gold px-4 py-2 text-sm font-bold text-night transition-colors duration-200 hover:bg-gold-bright"
+              >
+                Entrar
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -121,6 +158,17 @@ export function Lobby() {
             })}
           </div>
 
+          {/* Aviso para jugar el Dice real */}
+          {!player.ready ? null : !player.user ? (
+            <div className="mb-6 rounded-xl border border-azure/30 bg-azure/5 px-4 py-3 text-sm text-ink-soft">
+              Entra a tu cuenta para jugar. <strong className="text-azure">Capri Dice</strong> ya apuesta de verdad contra tu saldo.
+            </div>
+          ) : player.cash === 0 ? (
+            <div className="mb-6 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3 text-sm text-ink-soft">
+              Tu saldo es 0 FUN. Pídele a tu operador que te cargue saldo para empezar a jugar.
+            </div>
+          ) : null}
+
           {/* Destacados (solo sin búsqueda y en "todos") */}
           {category === "todos" && !query.trim() && (
             <section className="mb-8" aria-label="Destacados">
@@ -128,7 +176,7 @@ export function Lobby() {
               <div className="flex snap-x gap-3 overflow-x-auto pb-2">
                 {featured.map((g) => (
                   <div key={g.slug} className="w-32 shrink-0 snap-start md:w-40">
-                    <GameCard game={g} onPlay={setSelected} />
+                    <GameCard game={g} onPlay={onPlay} />
                   </div>
                 ))}
               </div>
@@ -152,14 +200,14 @@ export function Lobby() {
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 xl:grid-cols-5">
                 {games.map((g) => (
-                  <GameCard key={g.slug} game={g} onPlay={setSelected} />
+                  <GameCard key={g.slug} game={g} onPlay={onPlay} />
                 ))}
               </div>
             )}
           </section>
 
           <p className="mt-10 border-t border-line pt-5 pb-8 text-center text-xs text-ink-mute">
-            Demo · dinero 100% ficticio (FUN) · los juegos se conectan al provider-sim en la Semana 3 del roadmap
+            Dinero 100% ficticio (FUN) · Capri Dice conectado al provider-sim · resto del catálogo, próximamente
           </p>
         </main>
       </div>
@@ -176,27 +224,31 @@ export function Lobby() {
         <Link href="/#promos" className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Promos</Link>
       </nav>
 
-      {/* ── Modal demo ── */}
-      {selected && (
+      {/* ── Auth ── */}
+      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+
+      {/* ── Juego real en iframe ── */}
+      {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
+
+      {/* ── Modal informativo (juegos aún sin backend) ── */}
+      {info && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-label={`Información de ${selected.name}`}
-          onClick={() => setSelected(null)}
+          aria-label={`Información de ${info.name}`}
+          onClick={() => setInfo(null)}
         >
           <div className="glass w-full max-w-sm rounded-2xl p-6 text-center" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display text-2xl font-semibold text-gold-bright">
-              {selected.slug === "__deposit" ? "Recarga de FUN" : selected.name}
-            </h3>
+            <h3 className="font-display text-2xl font-semibold text-gold-bright">{info.name}</h3>
             <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-              {selected.slug === "__deposit"
-                ? "En la plataforma completa, este botón acredita FUN al instante a través del wallet (depósito fake, Semana 8 del roadmap)."
-                : "Demo de portfolio: este juego se conecta al provider-sim con apuestas reales contra el wallet en la Semana 3 del roadmap."}
+              {info.badge === "PRONTO"
+                ? "Este juego en vivo llegará con los proveedores reales. De momento, prueba Capri Dice, que ya apuesta contra tu saldo."
+                : "Este juego se conectará al provider-sim próximamente. Hoy ya puedes jugar a Capri Dice de verdad."}
             </p>
             <button
               type="button"
-              onClick={() => setSelected(null)}
+              onClick={() => setInfo(null)}
               className="mt-6 cursor-pointer rounded-full bg-gold px-6 py-2.5 text-sm font-bold text-night transition-colors duration-200 hover:bg-gold-bright"
             >
               Entendido

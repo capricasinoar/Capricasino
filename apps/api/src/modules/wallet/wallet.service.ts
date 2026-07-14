@@ -240,11 +240,16 @@ export class WalletService {
       // Reintento del proveedor: misma UNIQUE → devolver EXACTAMENTE el resultado
       // original sin volver a mover saldo (TRAMPA #1/#2).
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        const prev = await this.prisma.transaction.findUnique({
-          where: { providerId_providerTxId: { providerId: provider.id, providerTxId: p.providerTxId } },
-        });
-        if (prev) {
-          return { transactionId: prev.id, providerTxId: p.providerTxId, balance: prev.balanceAfter ?? 0n, replayed: true };
+        // Si el duplicado llegó EN PARALELO, el original puede estar a
+        // milisegundos de hacer COMMIT (o aún sin balanceAfter): esperar breve.
+        for (let i = 0; i < 5; i++) {
+          const prev = await this.prisma.transaction.findUnique({
+            where: { providerId_providerTxId: { providerId: provider.id, providerTxId: p.providerTxId } },
+          });
+          if (prev?.balanceAfter !== null && prev !== null) {
+            return { transactionId: prev.id, providerTxId: p.providerTxId, balance: prev.balanceAfter!, replayed: true };
+          }
+          await new Promise((r) => setTimeout(r, 25 * (i + 1)));
         }
       }
       throw e;

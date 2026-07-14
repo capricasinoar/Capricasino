@@ -41,7 +41,7 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Extra:** landing pública + lobby demo con catálogo mock
 - ✅ **Semana 1 — Auth + usuarios:** registro, login, JWT + refresh rotativo con detección de reuso, 8 tests de integración
 - ✅ **Semana 2 — Wallet + Ledger:** doble entrada, idempotencia, FOR UPDATE + CHECK, rollback append-only, cargas/retiradas manuales con triple registro y CLI de operador (`pnpm admin`). 13 tests nuevos
-- ⏳ Semana 3 — Provider-sim + callbacks HMAC + modo caos
+- ✅ **Semana 3 — Provider-sim + Dice jugable:** proveedor simulado con protocolo seamless-wallet HMAC, RNG provably fair, callbacks bet/win/rollback, modo caos. Capri Dice apuesta de verdad contra el wallet desde el navegador. 11 tests de resiliencia (32 total)
 - ⏳ Semana 3 — Provider-sim + callbacks HMAC + modo caos
 - ⏳ Semanas 4–12 — catálogo real, real-time, bonos, pagos fake, admin, seguridad, deploy
 

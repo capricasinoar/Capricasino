@@ -38,6 +38,9 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://capri:capri_dev@postgres:5432/capri_casino
       REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: http://localhost:3000
+      PROVIDER_SIM_URL: http://provider-sim:4100
+      PROVIDER_SIM_SECRET: capri-sim-secret-dev # compartido con provider-sim (dev)
     ports:
       - "4000:4000"
     depends_on:
@@ -45,6 +48,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  provider-sim:
+    build:
+      context: ../..
+      dockerfile: infra/docker/provider-sim.Dockerfile
+    environment:
+      SIM_PORT: 4100
+      SIM_PUBLIC_URL: http://localhost:4100
+      OPERATOR_CALLBACK_URL: http://api:4000/provider/v1/callback
+      PROVIDER_SIM_SECRET: capri-sim-secret-dev # solo dev; producción usa secret manager
+    ports:
+      - "4100:4100"
+    depends_on:
+      - api
 
   web:
     build:
@@ -56,6 +73,7 @@ services:
       - "3000:3000"
     depends_on:
       - api
+      - provider-sim
 
 volumes:
   pgdata:

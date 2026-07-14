@@ -10,7 +10,12 @@ export async function createApp(): Promise<NestFastifyApplication> {
     logger: process.env.NODE_ENV === "test" ? false : ["log", "warn", "error"],
   });
   await app.register(fastifyCookie);
-  app.setGlobalPrefix("api/v1");
+  // El callback del proveedor es server-to-server y vive fuera de /api/v1 (Cap. 7.5)
+  app.setGlobalPrefix("api/v1", { exclude: ["provider/v1/callback"] });
+  app.enableCors({
+    origin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
+    credentials: true, // la cookie de refresh viaja entre web (3000) y api (4000)
+  });
   app.enableShutdownHooks(); // graceful shutdown (Cap. 13.7)
   return app;
 }
