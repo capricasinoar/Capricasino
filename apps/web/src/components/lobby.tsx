@@ -1,47 +1,70 @@
 "use client";
 
-// Lobby conectado al backend: saldo real del wallet, login/registro, y lanzamiento
-// de juegos reales contra el provider-sim (hoy: Dice). El catálogo sigue siendo
-// mock (src/lib/games.ts) hasta la Semana 4; los juegos sin backend muestran aviso.
+// Lobby con catálogo SERVIDO POR LA API (agnóstico al proveedor): la lista, las
+// categorías y qué juego es "jugable" vienen del backend. El día que se enchufe
+// un agregador, su catálogo aparece aquí sin tocar este componente.
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CATEGORIES, GAMES, gamesByCategory, type CategorySlug, type MockGame } from "@/lib/games";
+import { fetchCatalog, fetchCategories, type CatalogGame, type Category } from "@/lib/catalog";
 import { GameCard } from "./game-card";
 import { Logo } from "./logo";
 import { AuthModal } from "./auth-modal";
 import { GameFrame } from "./game-frame";
 import { session, usePlayerSession } from "@/lib/session-store";
 
-// Juegos con backend real disponible hoy (Semana 3). El resto = aviso "pronto".
-const PLAYABLE = new Set(["dice"]);
+const FIXED_CATEGORIES: { slug: string; name: string }[] = [
+  { slug: "todos", name: "Todos" },
+  { slug: "originals", name: "Originals" },
+  { slug: "slots", name: "Slots" },
+  { slug: "crash", name: "Crash" },
+  { slug: "live", name: "En vivo" },
+];
 
 function formatFun(cents: number) {
-  return new Intl.NumberFormat("es-ES", { minimumFractionDigits: 0 }).format(Math.floor(cents / 100));
+  return new Intl.NumberFormat("es-ES").format(Math.floor(cents / 100));
 }
 
 export function Lobby() {
   const player = usePlayerSession();
-  const [category, setCategory] = useState<CategorySlug>("todos");
+  const [category, setCategory] = useState("todos");
   const [query, setQuery] = useState("");
-  const [info, setInfo] = useState<MockGame | null>(null); // modal informativo
-  const [playing, setPlaying] = useState<MockGame | null>(null); // iframe de juego
+  const [allGames, setAllGames] = useState<CatalogGame[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [info, setInfo] = useState<CatalogGame | null>(null);
+  const [playing, setPlaying] = useState<CatalogGame | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
-    session.bootstrap(); // intenta refrescar sesión con la cookie
+    session.bootstrap();
+    Promise.all([fetchCatalog(), fetchCategories()])
+      .then(([games, cats]) => {
+        setAllGames(games);
+        setCategories(cats);
+      })
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
   }, []);
 
+  const countByCat = useMemo(() => {
+    const m: Record<string, number> = { todos: allGames.length };
+    for (const c of categories) m[c.slug] = c.count;
+    return m;
+  }, [allGames, categories]);
+
   const games = useMemo(() => {
-    const base = gamesByCategory(category);
+    const byCat =
+      category === "todos" ? allGames : allGames.filter((g) => g.categories.includes(category));
     const q = query.trim().toLowerCase();
-    return q ? base.filter((g) => g.name.toLowerCase().includes(q)) : base;
-  }, [category, query]);
+    return q ? byCat.filter((g) => g.name.toLowerCase().includes(q)) : byCat;
+  }, [allGames, category, query]);
 
-  const featured = GAMES.filter((g) => g.featured);
+  const featured = useMemo(() => allGames.filter((g) => g.isFeatured), [allGames]);
 
-  function onPlay(game: MockGame) {
-    if (game.badge === "PRONTO" || !PLAYABLE.has(game.slug)) {
+  function onPlay(game: CatalogGame) {
+    if (!game.playable) {
       setInfo(game);
       return;
     }
@@ -54,7 +77,6 @@ export function Lobby() {
 
   return (
     <div className="min-h-dvh pb-16 md:pb-0">
-      {/* ── Barra superior ── */}
       <header className="glass sticky top-0 z-40">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6">
           <Link href="/" className="cursor-pointer" aria-label="Volver a la portada">
@@ -62,14 +84,7 @@ export function Lobby() {
           </Link>
 
           <div className="relative mx-auto w-full max-w-md">
-            <svg
-              viewBox="0 0 24 24"
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-mute"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
+            <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-mute" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.5-3.5" />
             </svg>
@@ -83,7 +98,6 @@ export function Lobby() {
             />
           </div>
 
-          {/* saldo / sesión */}
           <div className="flex shrink-0 items-center gap-2">
             {player.user ? (
               <>
@@ -113,10 +127,9 @@ export function Lobby() {
       </header>
 
       <div className="mx-auto flex max-w-7xl gap-8 px-4 pt-6 md:px-6">
-        {/* ── Sidebar categorías (desktop) ── */}
         <aside className="hidden w-44 shrink-0 lg:block" aria-label="Categorías">
           <nav className="sticky top-24 space-y-1">
-            {CATEGORIES.map((c) => {
+            {FIXED_CATEGORIES.map((c) => {
               const active = c.slug === category;
               return (
                 <button
@@ -128,18 +141,16 @@ export function Lobby() {
                   }`}
                 >
                   {c.name}
-                  <span className="float-right text-xs text-ink-mute">{gamesByCategory(c.slug).length}</span>
+                  <span className="float-right text-xs text-ink-mute">{countByCat[c.slug] ?? 0}</span>
                 </button>
               );
             })}
           </nav>
         </aside>
 
-        {/* ── Contenido ── */}
         <main className="min-w-0 flex-1">
-          {/* chips categorías (móvil/tablet) */}
           <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden" role="tablist" aria-label="Categorías">
-            {CATEGORIES.map((c) => {
+            {FIXED_CATEGORIES.map((c) => {
               const active = c.slug === category;
               return (
                 <button
@@ -158,79 +169,79 @@ export function Lobby() {
             })}
           </div>
 
-          {/* Aviso para jugar el Dice real */}
-          {!player.ready ? null : !player.user ? (
+          {player.ready && !player.user && (
             <div className="mb-6 rounded-xl border border-azure/30 bg-azure/5 px-4 py-3 text-sm text-ink-soft">
               Entra a tu cuenta para jugar. <strong className="text-azure">Capri Dice</strong> ya apuesta de verdad contra tu saldo.
             </div>
-          ) : player.cash === 0 ? (
+          )}
+          {player.ready && player.user && player.cash === 0 && (
             <div className="mb-6 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3 text-sm text-ink-soft">
               Tu saldo es 0 FUN. Pídele a tu operador que te cargue saldo para empezar a jugar.
             </div>
-          ) : null}
-
-          {/* Destacados (solo sin búsqueda y en "todos") */}
-          {category === "todos" && !query.trim() && (
-            <section className="mb-8" aria-label="Destacados">
-              <h2 className="font-display mb-3 text-xl font-semibold">Destacados</h2>
-              <div className="flex snap-x gap-3 overflow-x-auto pb-2">
-                {featured.map((g) => (
-                  <div key={g.slug} className="w-32 shrink-0 snap-start md:w-40">
-                    <GameCard game={g} onPlay={onPlay} />
-                  </div>
-                ))}
-              </div>
-            </section>
           )}
 
-          <section aria-label="Catálogo">
-            <div className="mb-3 flex items-baseline justify-between">
-              <h2 className="font-display text-xl font-semibold">
-                {CATEGORIES.find((c) => c.slug === category)?.name}
-              </h2>
-              <span className="text-xs text-ink-mute">
-                {games.length} {games.length === 1 ? "juego" : "juegos"}
-              </span>
-            </div>
+          {loadError ? (
+            <p className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-10 text-center text-sm text-ink-soft">
+              No se pudo cargar el catálogo. ¿Está el servidor del casino en marcha?
+            </p>
+          ) : loading ? (
+            <p className="px-4 py-16 text-center text-sm text-ink-mute">Cargando catálogo…</p>
+          ) : (
+            <>
+              {category === "todos" && !query.trim() && featured.length > 0 && (
+                <section className="mb-8" aria-label="Destacados">
+                  <h2 className="font-display mb-3 text-xl font-semibold">Destacados</h2>
+                  <div className="flex snap-x gap-3 overflow-x-auto pb-2">
+                    {featured.map((g) => (
+                      <div key={g.id} className="w-32 shrink-0 snap-start md:w-40">
+                        <GameCard game={g} onPlay={onPlay} />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-            {games.length === 0 ? (
-              <p className="rounded-xl border border-line bg-card px-4 py-10 text-center text-sm text-ink-mute">
-                Sin resultados para «{query}». Prueba con otro nombre.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 xl:grid-cols-5">
-                {games.map((g) => (
-                  <GameCard key={g.slug} game={g} onPlay={onPlay} />
-                ))}
-              </div>
-            )}
-          </section>
+              <section aria-label="Catálogo">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h2 className="font-display text-xl font-semibold">
+                    {FIXED_CATEGORIES.find((c) => c.slug === category)?.name}
+                  </h2>
+                  <span className="text-xs text-ink-mute">
+                    {games.length} {games.length === 1 ? "juego" : "juegos"}
+                  </span>
+                </div>
+
+                {games.length === 0 ? (
+                  <p className="rounded-xl border border-line bg-card px-4 py-10 text-center text-sm text-ink-mute">
+                    {query.trim() ? `Sin resultados para «${query}».` : "No hay juegos en esta categoría."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 xl:grid-cols-5">
+                    {games.map((g) => (
+                      <GameCard key={g.id} game={g} onPlay={onPlay} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
 
           <p className="mt-10 border-t border-line pt-5 pb-8 text-center text-xs text-ink-mute">
-            Dinero 100% ficticio (FUN) · Capri Dice conectado al provider-sim · resto del catálogo, próximamente
+            Catálogo servido por el operador · Capri Dice jugable · el resto llegará al integrar proveedores
           </p>
         </main>
       </div>
 
-      {/* ── Nav inferior (móvil) ── */}
       <nav className="glass fixed inset-x-0 bottom-0 z-40 flex justify-around py-2.5 md:hidden" aria-label="Navegación móvil">
         <Link href="/" className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Portada</Link>
-        <button type="button" onClick={() => setCategory("originals")} className="cursor-pointer px-4 py-1 text-xs font-medium text-gold-bright">
-          Originals
-        </button>
-        <button type="button" onClick={() => setCategory("slots")} className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">
-          Slots
-        </button>
+        <button type="button" onClick={() => setCategory("originals")} className="cursor-pointer px-4 py-1 text-xs font-medium text-gold-bright">Originals</button>
+        <button type="button" onClick={() => setCategory("slots")} className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Slots</button>
         <Link href="/#promos" className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Promos</Link>
       </nav>
 
-      {/* ── Auth ── */}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-
-      {/* ── Juego real en iframe ── */}
       {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
 
-      {/* ── Modal informativo (juegos aún sin backend) ── */}
       {info && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm"
@@ -242,9 +253,8 @@ export function Lobby() {
           <div className="glass w-full max-w-sm rounded-2xl p-6 text-center" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-display text-2xl font-semibold text-gold-bright">{info.name}</h3>
             <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-              {info.badge === "PRONTO"
-                ? "Este juego en vivo llegará con los proveedores reales. De momento, prueba Capri Dice, que ya apuesta contra tu saldo."
-                : "Este juego se conectará al provider-sim próximamente. Hoy ya puedes jugar a Capri Dice de verdad."}
+              De <strong className="text-ink">{info.providerName}</strong>. Este juego estará disponible cuando se
+              integre su proveedor. Hoy ya puedes jugar a Capri Dice de verdad contra tu saldo.
             </p>
             <button
               type="button"

@@ -3,11 +3,11 @@
 // Abre un juego lanzado en un <iframe> (el juego corre en el provider-sim).
 // Al cerrar, resincroniza el saldo por REST (la verdad es la DB — Cap. 9.3).
 import { useEffect, useState } from "react";
-import type { MockGame } from "@/lib/games";
+import type { CatalogGame } from "@/lib/catalog";
 import { api, ApiError } from "@/lib/api";
 import { session } from "@/lib/session-store";
 
-export function GameFrame({ game, onClose }: { game: MockGame; onClose: () => void }) {
+export function GameFrame({ game, onClose }: { game: CatalogGame; onClose: () => void }) {
   const [gameUrl, setGameUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
 

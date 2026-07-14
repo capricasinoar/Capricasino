@@ -43,17 +43,42 @@ export type BalanceResponse = z.infer<typeof BalanceResponse>;
 export const GameType = z.enum(["slot", "live", "crash", "table", "instant", "original"]);
 export type GameType = z.infer<typeof GameType>;
 
+export const Volatility = z.enum(["low", "medium", "high"]);
+export type Volatility = z.infer<typeof Volatility>;
+
+// Forma del catálogo pensada para ser AGNÓSTICA al proveedor: son los mismos
+// campos que entregaría un agregador (Realist, Hub88, SoftSwiss). El día de la
+// licencia, importar su catálogo es un seed con esta forma — no un rediseño.
 export const GameSummary = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  provider: z.string(),
+  provider: z.string(), // código técnico del proveedor: 'sim', 'capri-studios'...
+  providerName: z.string(), // nombre para mostrar
   type: GameType,
-  rtp: z.number().optional(),
-  thumbnail: z.string().optional(),
+  rtp: z.number().nullable().optional(),
+  volatility: Volatility.nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+  categories: z.array(z.string()).default([]),
   isFeatured: z.boolean().default(false),
+  // true si tenemos un adapter registrado para su proveedor (hoy: solo 'sim').
+  // Un agregador real pondría en true todo su catálogo al enchufarse.
+  playable: z.boolean(),
 });
 export type GameSummary = z.infer<typeof GameSummary>;
+
+export const GameCatalogResponse = z.object({
+  items: z.array(GameSummary),
+  nextCursor: z.string().nullable(),
+});
+export type GameCatalogResponse = z.infer<typeof GameCatalogResponse>;
+
+export const CategorySummary = z.object({
+  slug: z.string(),
+  name: z.string(),
+  count: z.number().int().nonnegative(),
+});
+export type CategorySummary = z.infer<typeof CategorySummary>;
 
 export const LaunchGameRequest = z.object({ gameId: z.string() });
 export const LaunchGameResponse = z.object({

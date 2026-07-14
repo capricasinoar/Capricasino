@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GAMES } from "@/lib/games";
+import { LANDING_FEATURED } from "@/lib/games";
 import { GameCard } from "./game-card";
 import { Logo } from "./logo";
 
@@ -70,7 +70,7 @@ export function Hero() {
 /* ──────────────────── JUEGOS DESTACADOS ───────────────────── */
 
 export function FeaturedGames() {
-  const featured = GAMES.filter((g) => g.featured);
+  const featured = LANDING_FEATURED.filter((g) => g.isFeatured);
   return (
     <section id="juegos" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 md:px-6 md:py-24">
       <div className="mb-8 flex items-end justify-between gap-4">
@@ -92,7 +92,7 @@ export function FeaturedGames() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
         {featured.map((game) => (
-          <GameCard key={game.slug} game={game} />
+          <GameCard key={game.id} game={game} />
         ))}
       </div>
 

@@ -45,7 +45,8 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Semana 2 — Wallet + Ledger:** doble entrada, idempotencia, FOR UPDATE + CHECK, rollback append-only, cargas/retiradas manuales con triple registro y CLI de operador (`pnpm admin`). 13 tests nuevos
 - ✅ **Semana 3 — Provider-sim + Dice jugable:** proveedor simulado con protocolo seamless-wallet HMAC, RNG provably fair, callbacks bet/win/rollback, modo caos. Capri Dice apuesta de verdad contra el wallet desde el navegador. 11 tests de resiliencia (32 total)
 - ✅ **Panel de administración (adelantado de S9):** `apps/admin` con auth separada, dashboard (KPIs, GGR), lista de clientes, ficha con ledger completo, carga/retirada auditada, visor de auditoría
-- ⏳ Siguiente — catálogo agnóstico de proveedor (costura del agregador), juego responsable + reporting, o saldo en tiempo real
+- ✅ **Semana 4 — Catálogo agnóstico de proveedor:** catálogo servido desde la DB con forma de agregador (`GET /games`), `ProviderRegistry` que despacha el launch por proveedor, `playable` derivado del registro. Lobby consumiendo la API. Costura lista para enchufar un agregador (Realist/Hub88) como seed + adapter
+- ⏳ Siguiente — juego responsable + reporting (costuras regulatorias), o saldo en tiempo real
 
 ## Acceso al panel de administración
 

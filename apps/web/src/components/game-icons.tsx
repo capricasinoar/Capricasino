@@ -1,4 +1,15 @@
-import type { GameIconKey } from "@/lib/games";
+export type GameIconKey =
+  | "dice"
+  | "coin"
+  | "mines"
+  | "plinko"
+  | "limbo"
+  | "crash"
+  | "slot"
+  | "keno"
+  | "roulette"
+  | "blackjack"
+  | "baccarat";
 
 /* Iconos SVG inline (sin emojis ni librerías externas), trazo consistente 1.5 */
 export function GameIcon({ icon, className = "h-10 w-10" }: { icon: GameIconKey; className?: string }) {
