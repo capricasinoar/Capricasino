@@ -6,6 +6,8 @@ import { adminApi, setToken, AdminApiError } from "@/lib/admin-api";
 export function Login({ onDone }: { onDone: (a: { email: string; role: string }) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [needsCode, setNeedsCode] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -14,11 +16,16 @@ export function Login({ onDone }: { onDone: (a: { email: string; role: string })
     setError("");
     setBusy(true);
     try {
-      const res = await adminApi.login(email, password);
+      const res = await adminApi.login(email, password, needsCode ? code : undefined);
       setToken(res.accessToken);
       onDone({ email: res.admin.email, role: res.admin.role });
     } catch (err) {
-      setError(err instanceof AdminApiError ? err.message : "No se pudo iniciar sesión");
+      if (err instanceof AdminApiError && (err.code === "TWO_FACTOR_REQUIRED" || err.code === "TWO_FACTOR_INVALID")) {
+        setNeedsCode(true);
+        setError(err.code === "TWO_FACTOR_INVALID" ? "Código incorrecto, inténtalo de nuevo." : "");
+      } else {
+        setError(err instanceof AdminApiError ? err.message : "No se pudo iniciar sesión");
+      }
     } finally {
       setBusy(false);
     }
@@ -48,6 +55,17 @@ export function Login({ onDone }: { onDone: (a: { email: string; role: string })
             placeholder="Contraseña"
             className="w-full rounded-lg border border-line bg-night px-4 py-2.5 text-sm focus:border-gold/60 focus:outline-none"
           />
+          {needsCode && (
+            <input
+              type="text"
+              inputMode="numeric"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="Código de 2FA (6 dígitos)"
+              className="w-full rounded-lg border border-gold/40 bg-night px-4 py-2.5 text-center text-lg tracking-[0.4em] focus:border-gold/60 focus:outline-none"
+            />
+          )}
           {error && <p className="text-sm text-danger">{error}</p>}
           <button
             type="submit"

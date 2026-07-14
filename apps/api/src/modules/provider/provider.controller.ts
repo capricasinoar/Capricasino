@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post, UnauthorizedException } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
 import { ProviderCallback } from "@capri/contracts";
 import { ProviderService } from "./provider.service";
 import { verifySignature } from "./hmac.util";
@@ -7,6 +8,9 @@ const SIM_SECRET = () => process.env.PROVIDER_SIM_SECRET ?? "capri-sim-secret-de
 
 // Endpoint server-to-server que golpea el proveedor. NO va bajo /api/v1
 // (excluido del prefijo global en main.ts) y NUNCA lo llama el browser.
+// Exento del rate limit del jugador: es tráfico de servidor, alto volumen
+// legítimo, protegido por la firma HMAC (Cap. 8.6).
+@SkipThrottle()
 @Controller("provider/v1")
 export class ProviderController {
   constructor(private readonly provider: ProviderService) {}

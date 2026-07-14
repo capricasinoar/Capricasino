@@ -8,8 +8,15 @@ import { Clients } from "./clients";
 import { ClientDetail } from "./client-detail";
 import { AuditLog } from "./audit-log";
 import { Reports } from "./reports";
+import { Security } from "./security";
 
-type View = { name: "dashboard" } | { name: "clients" } | { name: "client"; id: string } | { name: "reports" } | { name: "audit" };
+type View =
+  | { name: "dashboard" }
+  | { name: "clients" }
+  | { name: "client"; id: string }
+  | { name: "reports" }
+  | { name: "audit" }
+  | { name: "security" };
 
 export function AdminApp() {
   const [admin, setAdmin] = useState<{ email: string; role: string } | null>(null);
@@ -36,6 +43,7 @@ export function AdminApp() {
     { key: "clients", label: "Clientes" },
     { key: "reports", label: "Reportes" },
     { key: "audit", label: "Auditoría" },
+    { key: "security", label: "Seguridad" },
   ];
 
   return (
@@ -83,6 +91,7 @@ export function AdminApp() {
         )}
         {view.name === "reports" && <Reports />}
         {view.name === "audit" && <AuditLog />}
+        {view.name === "security" && <Security />}
       </main>
     </div>
   );

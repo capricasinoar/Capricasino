@@ -28,7 +28,8 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API}/admin/v1${path}`, {
     ...opts,
     headers: {
-      "content-type": "application/json",
+      // content-type solo si hay cuerpo: Fastify rechaza un body JSON vacío.
+      ...(opts.body ? { "content-type": "application/json" } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...opts.headers,
     },
@@ -116,12 +117,16 @@ export interface RgStatus {
 }
 
 export const adminApi = {
-  login: (email: string, password: string) =>
-    req<{ admin: { id: string; email: string; role: string }; accessToken: string }>("/auth/login", {
+  login: (email: string, password: string, code?: string) =>
+    req<{ admin: { id: string; email: string; role: string; twoFactor: boolean }; accessToken: string }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, ...(code ? { code } : {}) }),
     }),
   me: () => req<{ id: string; email: string; role: string }>("/me"),
+  twoFactorStatus: () => req<{ email: string; role: string; twoFactorEnabled: boolean }>("/auth/2fa/status"),
+  setup2fa: () => req<{ secret: string; otpauthUri: string }>("/auth/2fa/setup", { method: "POST" }),
+  enable2fa: (code: string) => req<{ enabled: boolean }>("/auth/2fa/enable", { method: "POST", body: JSON.stringify({ code }) }),
+  disable2fa: (code: string) => req<{ enabled: boolean }>("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ code }) }),
   dashboard: () => req<Dashboard>("/dashboard"),
   users: (search?: string) => req<UserRow[]>(`/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
   user: (id: string) => req<UserDetail>(`/users/${id}`),

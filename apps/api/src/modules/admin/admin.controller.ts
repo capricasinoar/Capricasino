@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query, Res, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import type { FastifyReply } from "fastify";
 import { LimitKind } from "@prisma/client";
 import { z } from "zod";
@@ -12,7 +13,12 @@ import { AdminAuthGuard, CurrentAdmin, Roles } from "./admin-auth.guard";
 import { AdminService } from "./admin.service";
 import { ReportsService } from "./reports.service";
 
-const LoginBody = z.object({ email: z.string().email(), password: z.string().min(1) });
+const LoginBody = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+  code: z.string().regex(/^\d{6}$/).optional(), // código 2FA si está activo
+});
+const CodeBody = z.object({ code: z.string().regex(/^\d{6}$/) });
 const AdjustBody = z.object({
   amount: z.number().int().positive(), // en unidad mínima FUN (centavos)
   kind: z.enum(["deposit", "withdrawal"]),
@@ -33,11 +39,12 @@ export class AdminController {
     private readonly rg: ResponsibleService,
   ) {}
 
-  // ── Auth (sin guard) ──
+  // ── Auth (sin guard) ── Login de admin con tope estricto (fuerza bruta).
   @Post("auth/login")
+  @Throttle({ default: { limit: 6, ttl: 60_000 } })
   @HttpCode(200)
   login(@Body(new ZodValidationPipe(LoginBody)) body: z.infer<typeof LoginBody>) {
-    return this.auth.login(body.email, body.password);
+    return this.auth.login(body.email, body.password, body.code);
   }
 
   // ── Todo lo demás exige token de admin ──
@@ -45,6 +52,34 @@ export class AdminController {
   @UseGuards(AdminAuthGuard)
   me(@CurrentAdmin() admin: AdminJwtPayload) {
     return { id: admin.sub, email: admin.email, role: admin.role };
+  }
+
+  // ── 2FA (TOTP) del propio admin ──
+  @Get("auth/2fa/status")
+  @UseGuards(AdminAuthGuard)
+  twoFactorStatus(@CurrentAdmin() admin: AdminJwtPayload) {
+    return this.auth.status(admin.sub);
+  }
+
+  @Post("auth/2fa/setup")
+  @UseGuards(AdminAuthGuard)
+  @HttpCode(200)
+  setup2fa(@CurrentAdmin() admin: AdminJwtPayload) {
+    return this.auth.setup2fa(admin.sub);
+  }
+
+  @Post("auth/2fa/enable")
+  @UseGuards(AdminAuthGuard)
+  @HttpCode(200)
+  enable2fa(@Body(new ZodValidationPipe(CodeBody)) body: z.infer<typeof CodeBody>, @CurrentAdmin() admin: AdminJwtPayload) {
+    return this.auth.enable2fa(admin.sub, body.code);
+  }
+
+  @Post("auth/2fa/disable")
+  @UseGuards(AdminAuthGuard)
+  @HttpCode(200)
+  disable2fa(@Body(new ZodValidationPipe(CodeBody)) body: z.infer<typeof CodeBody>, @CurrentAdmin() admin: AdminJwtPayload) {
+    return this.auth.disable2fa(admin.sub, body.code);
   }
 
   @Get("dashboard")

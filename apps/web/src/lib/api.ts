@@ -15,7 +15,9 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
     ...opts,
     credentials: "include",
     headers: {
-      "content-type": "application/json",
+      // content-type solo si hay cuerpo: Fastify rechaza un body JSON vacío
+      // (afecta a POST sin body como refresh/logout).
+      ...(opts.body ? { "content-type": "application/json" } : {}),
       ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       ...opts.headers,
     },

@@ -20,7 +20,7 @@ Arquitectura de referencia: `docs/architecture.md` (leerlo antes de tocar wallet
 4. **Toda operación de saldo es idempotente y atómica:** `provider_tx_id` UNIQUE + `SELECT ... FOR UPDATE` + update condicional + asientos, todo en UNA transacción de DB.
 5. **Doble entrada:** los asientos de cada transacción suman cero. Se valida antes del COMMIT.
 6. **El resultado del juego nunca lo decide el cliente.** Solo callbacks server-to-server firmados (HMAC, `timingSafeEqual`) mueven saldo.
-7. **Secretos nunca en el repo** ni en logs. `.env` está en `.gitignore`; en producción, secret manager.
+7. **Secretos nunca en el repo** ni en logs. `.env` está en `.gitignore`; en producción, secret manager. El arranque aborta si en `NODE_ENV=production` siguen los valores dev de `JWT_SECRET`/`ADMIN_JWT_SECRET`/`PROVIDER_SIM_SECRET`/`ADMIN_TOTP_KEY`.
 8. **Ningún módulo toca las tablas de otro módulo.** Comunicación solo vía interfaces públicas (puertos).
 9. **Timestamps `timestamptz` en UTC.** Conversión solo en presentación.
 10. Las 🧩 COSTURAS-REAL (PSP, KYC, proveedor certificado, juego responsable, reporting) se implementan como **puertos con adapters fake**. No mezclar lógica real/fake fuera del adapter.

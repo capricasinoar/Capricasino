@@ -1,4 +1,5 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { LoginRequest, RegisterRequest } from "@capri/contracts";
 import { ZodValidationPipe } from "../../shared/zod-validation.pipe";
@@ -25,6 +26,8 @@ function toBody(tokens: AuthTokens) {
   return body;
 }
 
+// Login y registro: tope estricto contra fuerza bruta (Cap. 8.4), por IP.
+@Throttle({ default: { limit: 8, ttl: 60_000 } })
 @Controller("auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
