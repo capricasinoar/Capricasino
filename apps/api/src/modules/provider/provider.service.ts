@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import type { ProviderCallback, ProviderCallbackResponse } from "@capri/contracts";
 import { PrismaService } from "../prisma/prisma.service";
 import { WalletService, WalletError } from "../wallet/wallet.service";
+import { ResponsibleService, LimitReachedError } from "../responsible/responsible.service";
 
 const PROVIDER_CODE = "sim";
 
@@ -14,6 +15,7 @@ export class ProviderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly wallet: WalletService,
+    private readonly rg: ResponsibleService,
   ) {}
 
   async handle(cb: ProviderCallback): Promise<ProviderCallbackResponse> {
@@ -35,6 +37,8 @@ export class ProviderService {
         }
 
         case "bet": {
+          // Juego responsable: límite diario de apostado/pérdida (Cap. 0 #4).
+          await this.rg.assertWithinLimits(userId, BigInt(cb.amount));
           const round = await this.upsertRound(session.id, cb.roundId);
           const res = await this.wallet.debit({
             userId,
@@ -88,6 +92,10 @@ export class ProviderService {
         }
       }
     } catch (e) {
+      if (e instanceof LimitReachedError) {
+        const b = await this.wallet.getBalance(userId).catch(() => null);
+        return { status: "LIMIT_REACHED", balance: b ? Number(b.cash) : undefined };
+      }
       if (e instanceof WalletError) {
         switch (e.code) {
           case "INSUFFICIENT_FUNDS":

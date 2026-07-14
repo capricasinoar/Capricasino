@@ -89,6 +89,31 @@ export interface AuditRow {
   after: unknown;
   createdAt: string;
 }
+export interface GgrDay {
+  day: string;
+  bets: number;
+  wins: number;
+  ggr: number;
+  deposits: number;
+  withdrawals: number;
+}
+export interface ClientActivity {
+  userId: string;
+  username: string;
+  email: string;
+  bets: number;
+  wins: number;
+  ggr: number;
+  deposits: number;
+  withdrawals: number;
+  balance: number;
+}
+export interface RgStatus {
+  limits: { kind: string; value: number }[];
+  exclusion: { until: string | null; source: string } | null;
+  wageredToday: number;
+  netLossToday: number;
+}
 
 export const adminApi = {
   login: (email: string, password: string) =>
@@ -106,7 +131,29 @@ export const adminApi = {
       body: JSON.stringify({ kind, amount, reason }),
     }),
   auditLogs: () => req<AuditRow[]>("/audit-logs"),
+  ggr: (days = 30) => req<GgrDay[]>(`/reports/ggr?days=${days}`),
+  clientActivity: () => req<ClientActivity[]>("/reports/client-activity"),
+  rgStatus: (id: string) => req<RgStatus>(`/users/${id}/responsible-gaming`),
+  exclude: (id: string, days: number | null, reason?: string) =>
+    req<{ ok: boolean }>(`/users/${id}/exclude`, { method: "POST", body: JSON.stringify({ days, reason }) }),
+  liftExclusion: (id: string) => req<{ ok: boolean }>(`/users/${id}/lift-exclusion`, { method: "POST" }),
 };
+
+// Descarga del CSV de actividad (usa el token en un blob).
+export async function downloadClientActivityCsv() {
+  const token = getToken();
+  const res = await fetch(`${API}/admin/v1/reports/client-activity.csv`, {
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new AdminApiError("ERROR", "No se pudo descargar el CSV", res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "capri-actividad-clientes.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function fun(cents: number) {
   return new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2 }).format(cents / 100) + " FUN";

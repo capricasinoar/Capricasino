@@ -54,4 +54,21 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ gameId }),
     }),
+
+  // Juego responsable (del propio jugador)
+  rgStatus: () => request<RgStatus>("/responsible-gaming/status"),
+  rgSetLimit: (kind: RgLimitKind, value: number) =>
+    request<RgStatus>("/responsible-gaming/limits", { method: "PUT", body: JSON.stringify({ kind, value }) }),
+  rgRemoveLimit: (kind: RgLimitKind) =>
+    request<RgStatus>(`/responsible-gaming/limits/${kind}`, { method: "DELETE" }),
+  rgSelfExclude: (days: number | null, reason?: string) =>
+    request<{ ok: boolean }>("/responsible-gaming/self-exclude", { method: "POST", body: JSON.stringify({ days, reason }) }),
 };
+
+export type RgLimitKind = "daily_wager" | "daily_loss" | "session_reminder";
+export interface RgStatus {
+  limits: { kind: RgLimitKind; value: number }[];
+  exclusion: { until: string | null; source: string } | null;
+  wageredToday: number;
+  netLossToday: number;
+}

@@ -20,7 +20,7 @@ export interface CallbackPayload {
 }
 
 export interface OperatorResponse {
-  status: "OK" | "INSUFFICIENT_FUNDS" | "INVALID_TOKEN" | "TRANSACTION_NOT_FOUND" | "INTERNAL_ERROR";
+  status: "OK" | "INSUFFICIENT_FUNDS" | "INVALID_TOKEN" | "TRANSACTION_NOT_FOUND" | "LIMIT_REACHED" | "INTERNAL_ERROR";
   balance?: number;
   transactionId?: string;
 }

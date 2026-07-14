@@ -7,6 +7,7 @@ import { ZodValidationPipe } from "../../shared/zod-validation.pipe";
 import { apiError } from "../../shared/api-error";
 import { PrismaService } from "../prisma/prisma.service";
 import { ProviderRegistry } from "../provider/provider.registry";
+import { ResponsibleService, ExcludedError } from "../responsible/responsible.service";
 import { GamesService } from "./games.service";
 
 type LaunchBody = z.infer<typeof LaunchGameRequest>;
@@ -17,6 +18,7 @@ export class GamesController {
     private readonly prisma: PrismaService,
     private readonly games: GamesService,
     private readonly registry: ProviderRegistry,
+    private readonly rg: ResponsibleService,
   ) {}
 
   // Catálogo público (el lobby lo muestra logueado o no).
@@ -42,6 +44,16 @@ export class GamesController {
     @Body(new ZodValidationPipe(LaunchGameRequest)) body: LaunchBody,
     @CurrentUser() user: JwtPayload,
   ) {
+    // Juego responsable: un jugador autoexcluido no puede abrir juegos (Cap. 0 #4).
+    try {
+      await this.rg.assertCanPlay(user.sub);
+    } catch (e) {
+      if (e instanceof ExcludedError) {
+        apiError(403, "SELF_EXCLUDED", "Tu cuenta está en autoexclusión. No puedes jugar en este momento.");
+      }
+      throw e;
+    }
+
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.gameId);
     const game = await this.prisma.game.findFirst({
       where: {

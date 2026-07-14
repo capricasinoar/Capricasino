@@ -63,6 +63,7 @@ app.post<{ Body: { token?: string; amount?: number; target?: number; clientSeed?
       timestamp: Date.now(),
     });
     if (bet.status === "INSUFFICIENT_FUNDS") return { error: "Saldo insuficiente", balance: bet.balance };
+    if (bet.status === "LIMIT_REACHED") return { error: "Has alcanzado tu límite de juego responsable por hoy", balance: bet.balance };
     if (bet.status !== "OK") return { error: `El operador rechazó la apuesta (${bet.status})` };
 
     // 3. CREDIT (win) solo si ganó — perder es un bet sin win (Cap. 3.5)

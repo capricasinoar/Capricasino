@@ -47,7 +47,8 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Panel de administración (adelantado de S9):** `apps/admin` con auth separada, dashboard (KPIs, GGR), lista de clientes, ficha con ledger completo, carga/retirada auditada, visor de auditoría
 - ✅ **Semana 4 — Catálogo agnóstico de proveedor:** catálogo servido desde la DB con forma de agregador (`GET /games`), `ProviderRegistry` que despacha el launch por proveedor, `playable` derivado del registro. Lobby consumiendo la API. Costura lista para enchufar un agregador (Realist/Hub88) como seed + adapter
 - ✅ **Semana 6 — Saldo en tiempo real:** WebSocket (Socket.IO) con auth JWT, el saldo se actualiza solo tras cada apuesta/premio (evento `balance.changed`), resync REST al reconectar. La cabecera destella al cambiar
-- ⏳ Siguiente — juego responsable + reporting (costuras regulatorias)
+- ✅ **Juego responsable + reporting (costuras #4 y #5):** límites diarios (apuesta/pérdida) y autoexclusión con enforcement real en launch y bet; panel de juego responsable para el jugador; reportes de GGR por día y actividad por cliente con exportación CSV en el admin, más excluir/reactivar clientes. 6 tests nuevos (38 total)
+- ⏳ Siguiente — seguridad/hardening (2FA admin, rate limiting) o pagos/historial
 
 ## Acceso al panel de administración
 

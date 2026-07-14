@@ -54,10 +54,53 @@ model User {
   kycRecords          KycRecord[]
   paymentTransactions PaymentTransaction[]
   notifications       Notification[]
+  playerLimits        PlayerLimit[]
+  selfExclusions      SelfExclusion[]
   affiliate           Affiliate?           @relation(fields: [affiliateId], references: [id])
   affiliateId         String?              @map("affiliate_id") @db.Uuid
 
   @@map("users")
+}
+
+// ── Juego responsable (🧩 COSTURA-REAL #4, Cap. 0) ───────────────────
+
+enum LimitKind {
+  daily_wager // tope de apostado por día (unidad mínima)
+  daily_loss // tope de pérdida neta por día (unidad mínima)
+  session_reminder // recordatorio de tiempo de juego (minutos)
+}
+
+model PlayerLimit {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id])
+  kind      LimitKind
+  value     BigInt // monto (unidad mínima) o minutos según kind
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([userId, kind]) // un límite activo por tipo
+  @@map("player_limits")
+}
+
+enum ExclusionSource {
+  player
+  admin
+}
+
+model SelfExclusion {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @map("user_id") @db.Uuid
+  user      User            @relation(fields: [userId], references: [id])
+  until     DateTime?       @map("until") @db.Timestamptz() // null = permanente
+  reason    String?
+  source    ExclusionSource
+  createdBy String?         @map("created_by") @db.Uuid // admin si source=admin
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId, createdAt])
+  @@map("self_exclusions")
 }
 
 model Wallet {

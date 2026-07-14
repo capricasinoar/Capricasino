@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { adminApi, fun, AdminApiError, type UserDetail } from "@/lib/admin-api";
+import { adminApi, fun, AdminApiError, type UserDetail, type RgStatus } from "@/lib/admin-api";
 
 const txColor: Record<string, string> = {
   deposit: "text-azure",
@@ -60,6 +60,8 @@ export function ClientDetail({ id, role, onBack }: { id: string; role: string; o
               Tu rol ({role}) no permite modificar saldo. Solo finance o super_admin.
             </p>
           )}
+
+          <ResponsibleBlock userId={id} status={data.status} onChange={load} />
         </div>
 
         {/* Columna derecha: historial con ledger */}
@@ -100,6 +102,78 @@ export function ClientDetail({ id, role, onBack }: { id: string; role: string; o
               </span>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResponsibleBlock({ userId, status, onChange }: { userId: string; status: string; onChange: () => void }) {
+  const [rg, setRg] = useState<RgStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const excluded = status === "self_excluded";
+
+  const load = useCallback(() => {
+    adminApi.rgStatus(userId).then(setRg).catch(() => undefined);
+  }, [userId]);
+  useEffect(load, [load]);
+
+  async function exclude(days: number | null) {
+    setBusy(true);
+    try {
+      await adminApi.exclude(userId, days, "Excluido por el operador");
+      onChange();
+      load();
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function lift() {
+    setBusy(true);
+    try {
+      await adminApi.liftExclusion(userId);
+      onChange();
+      load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-line bg-card p-5">
+      <h2 className="text-sm font-semibold">Juego responsable</h2>
+      {rg && (
+        <p className="mt-1 text-xs text-ink-mute">
+          Hoy: apostado {fun(rg.wageredToday)} · pérdida {fun(rg.netLossToday)}
+          {rg.limits.length > 0 && ` · límites: ${rg.limits.map((l) => l.kind).join(", ")}`}
+        </p>
+      )}
+
+      {excluded ? (
+        <div className="mt-3">
+          <p className="mb-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">
+            Cuenta en autoexclusión{rg?.exclusion?.until ? ` hasta ${rg.exclusion.until.slice(0, 10)}` : " (permanente)"}.
+          </p>
+          <button
+            onClick={lift}
+            disabled={busy}
+            className="cursor-pointer rounded-full border border-win/50 px-4 py-2 text-sm font-medium text-win transition-colors hover:bg-win/10 disabled:opacity-50"
+          >
+            Levantar exclusión
+          </button>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[["24h", 1], ["7 días", 7], ["30 días", 30], ["Permanente", null]].map(([label, days]) => (
+            <button
+              key={label as string}
+              onClick={() => exclude(days as number | null)}
+              disabled={busy}
+              className="cursor-pointer rounded-full border border-danger/50 px-3 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+            >
+              Excluir {label}
+            </button>
+          ))}
         </div>
       )}
     </div>

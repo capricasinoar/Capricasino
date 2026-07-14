@@ -7,8 +7,9 @@ import { Dashboard } from "./dashboard";
 import { Clients } from "./clients";
 import { ClientDetail } from "./client-detail";
 import { AuditLog } from "./audit-log";
+import { Reports } from "./reports";
 
-type View = { name: "dashboard" } | { name: "clients" } | { name: "client"; id: string } | { name: "audit" };
+type View = { name: "dashboard" } | { name: "clients" } | { name: "client"; id: string } | { name: "reports" } | { name: "audit" };
 
 export function AdminApp() {
   const [admin, setAdmin] = useState<{ email: string; role: string } | null>(null);
@@ -33,6 +34,7 @@ export function AdminApp() {
   const nav: { key: View["name"]; label: string }[] = [
     { key: "dashboard", label: "Resumen" },
     { key: "clients", label: "Clientes" },
+    { key: "reports", label: "Reportes" },
     { key: "audit", label: "Auditoría" },
   ];
 
@@ -79,6 +81,7 @@ export function AdminApp() {
         {view.name === "client" && (
           <ClientDetail id={view.id} role={admin.role} onBack={() => setView({ name: "clients" })} />
         )}
+        {view.name === "reports" && <Reports />}
         {view.name === "audit" && <AuditLog />}
       </main>
     </div>

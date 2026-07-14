@@ -11,6 +11,7 @@ import { GameCard } from "./game-card";
 import { Logo } from "./logo";
 import { AuthModal } from "./auth-modal";
 import { GameFrame } from "./game-frame";
+import { ResponsibleModal } from "./responsible-modal";
 import { session, usePlayerSession } from "@/lib/session-store";
 
 const FIXED_CATEGORIES: { slug: string; name: string }[] = [
@@ -63,6 +64,7 @@ export function Lobby() {
   const [info, setInfo] = useState<CatalogGame | null>(null);
   const [playing, setPlaying] = useState<CatalogGame | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [rgOpen, setRgOpen] = useState(false);
 
   useEffect(() => {
     session.bootstrap();
@@ -129,6 +131,14 @@ export function Lobby() {
             {player.user ? (
               <>
                 <BalancePill cash={player.cash} />
+                <button
+                  type="button"
+                  onClick={() => setRgOpen(true)}
+                  className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
+                  title="Juego responsable"
+                >
+                  Límites
+                </button>
                 <button
                   type="button"
                   onClick={() => session.logout()}
@@ -265,6 +275,7 @@ export function Lobby() {
       </nav>
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {rgOpen && <ResponsibleModal onClose={() => setRgOpen(false)} />}
       {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
 
       {info && (

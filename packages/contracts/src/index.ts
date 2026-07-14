@@ -95,6 +95,7 @@ export const ProviderCallbackStatus = z.enum([
   "INSUFFICIENT_FUNDS",
   "INVALID_TOKEN",
   "TRANSACTION_NOT_FOUND",
+  "LIMIT_REACHED", // límite de juego responsable alcanzado (Cap. 0 costura #4)
   "INTERNAL_ERROR",
 ]);
 export type ProviderCallbackStatus = z.infer<typeof ProviderCallbackStatus>;
