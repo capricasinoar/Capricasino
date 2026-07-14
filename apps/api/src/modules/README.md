@@ -13,6 +13,6 @@ Cada módulo es una rebanada vertical (controller · service · dto · ports · 
 | `bonus` | 7 | Campañas, wagering con contribución por juego, free spins, VIP, cashback |
 | `payments` | 8 (parcial ✅) | 🧩 Cargas/retiradas MANUALES del operador con triple registro (ledger + recibo + auditoría) vía CLI `pnpm admin`. Pendiente: endpoints jugador + cola de aprobación (S8-S9) |
 | `kyc` | 8 | 🧩 Stub (tablas ya presentes en el esquema) |
-| `admin` | 9 | Auth separada, KPIs, ledger por usuario, ajustes auditados, cola de retiros |
+| `admin` | 9 ✅ | Auth separada (JWT propio, RBAC), dashboard KPIs/GGR, lista de clientes, ficha con ledger, carga/retirada auditada, visor de auditoría. App web en `apps/admin` (:3001). Pendiente: 2FA + IP allowlist (S10), cola de retiros |
 
 Regla de oro: **todo lo que toca saldo pasa por `wallet/ports/wallet.port.ts`** y queda en el ledger.

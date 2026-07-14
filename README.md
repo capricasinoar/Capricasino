@@ -8,11 +8,13 @@ Plataforma de casino online **play money** (dinero 100% ficticio, moneda `FUN`).
 
 ```
 apps/
-  web/        Next.js 15 — landing pública + lobby demo (español, tema oscuro)
-  api/        NestJS 11 (Fastify) — monolito modular (auth·wallet·games·provider·bonus·…)
+  web/        Next.js 15 — landing pública + lobby (juega Capri Dice) · puerto 3000
+  admin/      Next.js 15 — panel de administración (auth separada) · puerto 3001
+  api/        NestJS 11 (Fastify) — monolito modular (auth·wallet·provider·admin·…) · puerto 4000
 packages/
-  contracts/  Tipos + esquemas Zod compartidos front/back
-  config/     tsconfig base compartido
+  contracts/     Tipos + esquemas Zod compartidos front/back
+  provider-sim/  Proveedor de juegos simulado (Capri Dice) · puerto 4100
+  config/        tsconfig base compartido
 prisma/       Esquema completo de la DB (PostgreSQL) + seed
 infra/docker/ docker-compose del stack (postgres, redis, api, web)
 docs/         Arquitectura + ADRs
@@ -42,7 +44,18 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Semana 1 — Auth + usuarios:** registro, login, JWT + refresh rotativo con detección de reuso, 8 tests de integración
 - ✅ **Semana 2 — Wallet + Ledger:** doble entrada, idempotencia, FOR UPDATE + CHECK, rollback append-only, cargas/retiradas manuales con triple registro y CLI de operador (`pnpm admin`). 13 tests nuevos
 - ✅ **Semana 3 — Provider-sim + Dice jugable:** proveedor simulado con protocolo seamless-wallet HMAC, RNG provably fair, callbacks bet/win/rollback, modo caos. Capri Dice apuesta de verdad contra el wallet desde el navegador. 11 tests de resiliencia (32 total)
-- ⏳ Semana 3 — Provider-sim + callbacks HMAC + modo caos
+- ✅ **Panel de administración (adelantado de S9):** `apps/admin` con auth separada, dashboard (KPIs, GGR), lista de clientes, ficha con ledger completo, carga/retirada auditada, visor de auditoría
+- ⏳ Siguiente — catálogo agnóstico de proveedor (costura del agregador), juego responsable + reporting, o saldo en tiempo real
+
+## Acceso al panel de administración
+
+App en `apps/admin` (puerto 3001). Arrancar: `pnpm admin-web`. Crear/cambiar contraseña de un admin:
+
+```bash
+pnpm admin-passwd owner@capri.local "tu-contraseña" super_admin
+```
+
+Desde el panel: resumen con KPIs, buscar clientes, ver su ledger completo y **cargar/retirar saldo** (queda en ledger + recibo + auditoría). La CLI `pnpm admin` sigue disponible como alternativa.
 - ⏳ Semanas 4–12 — catálogo real, real-time, bonos, pagos fake, admin, seguridad, deploy
 
 ## Aviso

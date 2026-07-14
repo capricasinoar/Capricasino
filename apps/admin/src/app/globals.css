@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Panel admin CAPRI — data-dense, oscuro, mismo lenguaje visual que la web */
+@theme {
+  --color-night: #080b14;
+  --color-surface: #0e1422;
+  --color-card: #141c30;
+  --color-line: #202b49;
+  --color-gold: #d4af37;
+  --color-gold-bright: #ecc960;
+  --color-azure: #38b6da;
+  --color-ink: #f2efe6;
+  --color-ink-soft: #b8bfd4;
+  --color-ink-mute: #7c86a3;
+  --color-win: #3ddc97;
+  --color-danger: #e5484d;
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background-color: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

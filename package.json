@@ -14,7 +14,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "admin": "tsx apps/api/src/cli/wallet-admin.ts"
+    "admin": "tsx apps/api/src/cli/wallet-admin.ts",
+    "admin-passwd": "tsx apps/api/src/cli/set-admin-password.ts",
+    "admin-web": "pnpm --filter @capri/admin dev"
   },
   "devDependencies": {
     "prisma": "^6.5.0",
