@@ -12,6 +12,25 @@ async function main() {
     create: { code: "sim", name: "Capri Provider Sim", type: "simulated" },
   });
 
+  // Provider interno para operaciones manuales del operador (cargas/retiradas)
+  await prisma.provider.upsert({
+    where: { code: "house" },
+    update: {},
+    create: { code: "house", name: "Capri House (operaciones manuales)", type: "direct" },
+  });
+
+  // Admin del operador para la CLI (sin password: la CLI no expone HTTP;
+  // el panel admin de S9 tendrá su propia auth + 2FA)
+  await prisma.adminUser.upsert({
+    where: { email: process.env.ADMIN_EMAIL ?? "owner@capri.local" },
+    update: {},
+    create: {
+      email: process.env.ADMIN_EMAIL ?? "owner@capri.local",
+      passwordHash: "!cli-only",
+      role: "super_admin",
+    },
+  });
+
   const categories = ["originals", "slots", "crash", "live", "nuevos", "populares"];
   for (const slug of categories) {
     await prisma.category.upsert({

@@ -118,6 +118,8 @@ model Transaction {
   roundId      String?           @map("round_id") @db.Uuid
   round        Round?            @relation(fields: [roundId], references: [id])
   amount       BigInt
+  balanceAfter BigInt?           @map("balance_after") // saldo cash tras aplicar (respuesta idempotente exacta)
+  meta         Json? // razón de ajustes, referencia externa, datos del juego
   status       TransactionStatus @default(completed)
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz()
 

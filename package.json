@@ -13,7 +13,8 @@
     "api": "pnpm --filter @capri/api dev",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "admin": "tsx apps/api/src/cli/wallet-admin.ts"
   },
   "devDependencies": {
     "prisma": "^6.5.0",
