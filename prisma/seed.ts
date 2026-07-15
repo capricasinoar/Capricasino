@@ -140,21 +140,20 @@ async function main() {
   }
 
   // ── Admin del operador (para el panel) ───────────────────────────
+  // La contraseña se SINCRONIZA con ADMIN_PASSWORD en cada arranque: así el
+  // operador la controla desde la variable de entorno (no hay UI de cambio).
   const adminEmail = process.env.ADMIN_EMAIL ?? "owner@capri.local";
   const adminPass = process.env.ADMIN_PASSWORD ?? "capri-admin-2026";
+  const adminHash = await argon2.hash(adminPass, { type: argon2.argon2id });
   await prisma.adminUser.upsert({
     where: { email: adminEmail },
-    update: {},
-    create: {
-      email: adminEmail,
-      passwordHash: await argon2.hash(adminPass, { type: argon2.argon2id }),
-      role: "super_admin",
-    },
+    update: { passwordHash: adminHash, role: "super_admin", isActive: true },
+    create: { email: adminEmail, passwordHash: adminHash, role: "super_admin" },
   });
 
   const total = await prisma.game.count();
   console.log(`Seed completado: 3 proveedores, ${catDefs.length} categorías, ${total} juegos (Capri Dice jugable).`);
-  console.log(`Admin: ${adminEmail} / ${adminPass}`);
+  console.log(`Admin listo: ${adminEmail} (contraseña = ADMIN_PASSWORD)`); // no imprimir la contraseña
 }
 
 main()
