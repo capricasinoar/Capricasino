@@ -25,7 +25,7 @@ export function ResponsibleModal({ onClose }: { onClose: () => void }) {
   async function saveLimit(kind: "daily_wager" | "daily_loss", raw: string) {
     const funVal = Number(raw);
     if (!Number.isFinite(funVal) || funVal <= 0) {
-      setMsg("Introduce un monto válido en FUN.");
+      setMsg("Introduce un monto válido en USD.");
       return;
     }
     setMsg("");
@@ -57,8 +57,8 @@ export function ResponsibleModal({ onClose }: { onClose: () => void }) {
 
         {status && (
           <p className="mt-3 rounded-lg border border-line bg-night px-3 py-2 text-xs text-ink-mute">
-            Hoy llevas apostado <strong className="text-ink-soft">{fun(status.wageredToday)} FUN</strong> · pérdida neta{" "}
-            <strong className="text-ink-soft">{fun(status.netLossToday)} FUN</strong>
+            Hoy llevas apostado <strong className="text-ink-soft">{fun(status.wageredToday)} USD</strong> · pérdida neta{" "}
+            <strong className="text-ink-soft">{fun(status.netLossToday)} USD</strong>
           </p>
         )}
 
@@ -139,7 +139,7 @@ function LimitRow({
         <h3 className="text-sm font-semibold text-ink">{title}</h3>
         {current !== null && (
           <span className="text-xs text-gold-bright">
-            actual: {fun(current)} FUN
+            actual: {fun(current)} USD
             <button onClick={onRemove} className="ml-2 cursor-pointer text-ink-mute underline hover:text-danger">quitar</button>
           </span>
         )}
@@ -148,7 +148,7 @@ function LimitRow({
       <div className="mt-2 flex gap-2">
         <input
           type="number" min="0" step="1" value={value} onChange={(e) => onChange(e.target.value)}
-          placeholder="FUN"
+          placeholder="USD"
           className="w-full rounded-lg border border-line bg-night px-3 py-2 text-sm focus:border-gold/60 focus:outline-none"
         />
         <button onClick={onSave} className="shrink-0 cursor-pointer rounded-lg bg-gold px-4 py-2 text-sm font-bold text-night transition-colors hover:bg-gold-bright">

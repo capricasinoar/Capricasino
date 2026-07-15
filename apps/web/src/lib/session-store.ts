@@ -52,14 +52,6 @@ export const session = {
     this.openRealtime();
   },
 
-  async register(email: string, username: string, password: string) {
-    const res = await api.register(email, username, password);
-    setAccessToken(res.accessToken);
-    set({ user: res.user });
-    await this.refreshBalance();
-    this.openRealtime();
-  },
-
   async logout() {
     disconnectRealtime();
     await api.logout().catch(() => undefined);

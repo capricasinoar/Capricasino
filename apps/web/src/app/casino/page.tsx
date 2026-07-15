@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Lobby } from "@/components/lobby";
+import { AppGate } from "@/components/app-gate";
 
 export const metadata: Metadata = {
-  title: "Lobby — CAPRI CASINO",
-  description: "Catálogo de juegos de CAPRI CASINO: originals provably fair, slots y crash. 100% play money.",
+  title: "CAPRI CASINO",
+  description: "Acceso privado para clientes de CAPRI.",
 };
 
+// Mismo portero que la portada (compatibilidad con enlaces antiguos a /casino).
 export default function CasinoPage() {
-  return <Lobby />;
+  return <AppGate />;
 }

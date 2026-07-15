@@ -45,7 +45,7 @@ app.post<{ Body: { token?: string; amount?: number; target?: number; clientSeed?
     const { token, amount, target, clientSeed } = req.body ?? {};
     if (!token || !Number.isInteger(amount) || amount! <= 0) return { error: "Apuesta inválida" };
     if (!Number.isInteger(target) || target! < 2 || target! > 98) return { error: "Objetivo inválido (2-98)" };
-    if (amount! > 1_000_000_00) return { error: "Apuesta máxima: 1.000.000 FUN" };
+    if (amount! > 1_000_000_00) return { error: "Apuesta máxima: 1.000.000 USD" };
     if (clientSeed) setClientSeed(token, clientSeed);
 
     // 1. El RNG resuelve la tirada ANTES de mover dinero (la semilla ya estaba comprometida)

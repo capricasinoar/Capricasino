@@ -44,8 +44,7 @@ export interface AuthResult {
 }
 
 export const api = {
-  register: (email: string, username: string, password: string) =>
-    request<AuthResult>("/auth/register", { method: "POST", body: JSON.stringify({ email, username, password }) }),
+  // Web privada: sin registro público. Solo el operador crea cuentas.
   login: (email: string, password: string) =>
     request<AuthResult>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   refresh: () => request<AuthResult>("/auth/refresh", { method: "POST" }),

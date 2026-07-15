@@ -32,6 +32,8 @@ Arquitectura de referencia: `docs/architecture.md` (leerlo antes de tocar wallet
 - Errores API: `{ error: { code, message, details } }`.
 - Frontend: componentes en `src/components`, datos mock en `src/lib`. Copy en **español**. Tema oscuro por defecto (tokens en `globals.css`).
 - **No usar meta tags de Twitter Cards** (twitter:card etc.) — decisión del propietario.
+- **Web privada:** NO hay registro público de jugadores. Solo el operador crea cuentas (panel admin → "Nuevo cliente", o endpoint `POST /admin/v1/users`). La web abre en pantalla de login (`AppGate`). No reintroducir `POST /auth/register` ni CTAs de "crear cuenta".
+- **Moneda mostrada: USD** (el saldo interno sigue en BigInt de centavos). No volver a "FUN". Cuidado: `\bFUN\b` es el token de moneda; `INSUFFICIENT_FUNDS` NO se toca.
 - Un módulo está "hecho" cuando: tiene tests (con concurrencia si toca saldo), README, y pasa `pnpm lint` + `pnpm typecheck` + build.
 
 ## Cómo correr

@@ -109,7 +109,7 @@ model Wallet {
   user         User     @relation(fields: [userId], references: [id])
   cashBalance  BigInt   @default(0) @map("cash_balance")
   bonusBalance BigInt   @default(0) @map("bonus_balance")
-  currency     String   @default("FUN")
+  currency     String   @default("USD")
   version      Int      @default(0)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 

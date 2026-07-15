@@ -5,7 +5,7 @@
 export interface LaunchParams {
   gameCode: string;
   playerToken: string; // launch_token de la game_session; vuelve en cada callback
-  currency: "FUN";
+  currency: "USD";
   language: string;
 }
 

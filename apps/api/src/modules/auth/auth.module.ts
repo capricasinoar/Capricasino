@@ -17,6 +17,6 @@ import { JwtAuthGuard } from "./jwt-auth.guard";
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard],
+  exports: [JwtAuthGuard, AuthService], // AuthService: el admin crea usuarios
 })
 export class AuthModule {}

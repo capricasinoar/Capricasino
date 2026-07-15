@@ -1,29 +1,6 @@
-import { Header } from "@/components/header";
-import {
-  Hero,
-  FeaturedGames,
-  HowItWorks,
-  Promos,
-  Vip,
-  ProvablyFair,
-  FinalCta,
-  Footer,
-} from "@/components/sections";
+import { AppGate } from "@/components/app-gate";
 
-export default function LandingPage() {
-  return (
-    <>
-      <Header />
-      <main>
-        <Hero />
-        <FeaturedGames />
-        <HowItWorks />
-        <Promos />
-        <Vip />
-        <ProvablyFair />
-        <FinalCta />
-      </main>
-      <Footer />
-    </>
-  );
+// Web privada: la portada es el acceso. Tras iniciar sesión, el lobby.
+export default function Home() {
+  return <AppGate />;
 }

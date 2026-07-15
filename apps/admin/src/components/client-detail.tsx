@@ -192,7 +192,7 @@ function AdjustForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     setMsg(null);
     const funAmount = Number(amount);
     if (!Number.isFinite(funAmount) || funAmount <= 0) {
-      setMsg({ ok: false, text: "Introduce un monto válido en FUN" });
+      setMsg({ ok: false, text: "Introduce un monto válido en USD" });
       return;
     }
     setBusy(true);
@@ -232,7 +232,7 @@ function AdjustForm({ userId, onDone }: { userId: string; onDone: () => void }) 
         ))}
       </div>
 
-      <label className="mt-4 block text-[0.65rem] uppercase tracking-wider text-ink-mute">Monto (FUN)</label>
+      <label className="mt-4 block text-[0.65rem] uppercase tracking-wider text-ink-mute">Monto (USD)</label>
       <input
         type="number"
         min="0"

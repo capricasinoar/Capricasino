@@ -55,11 +55,11 @@ run("juego responsable (integración)", () => {
   });
 
   it("límite diario de apostado: bloquea cuando la apuesta lo superaría", async () => {
-    await rg.setLimit(userId, "daily_wager", 5_000n); // tope 50 FUN/día
-    await activity("bet", 3_000n); // ya apostó 30 FUN hoy
-    // otra de 30 FUN → 60 > 50 → bloquea
+    await rg.setLimit(userId, "daily_wager", 5_000n); // tope 50 USD/día
+    await activity("bet", 3_000n); // ya apostó 30 USD hoy
+    // otra de 30 USD → 60 > 50 → bloquea
     await expect(rg.assertWithinLimits(userId, 3_000n)).rejects.toBeInstanceOf(LimitReachedError);
-    // una de 10 FUN → 40 <= 50 → permite
+    // una de 10 USD → 40 <= 50 → permite
     await expect(rg.assertWithinLimits(userId, 1_000n)).resolves.toBeUndefined();
     await rg.removeLimit(userId, "daily_wager");
   });
@@ -68,8 +68,8 @@ run("juego responsable (integración)", () => {
     // Estado del test anterior: bet 3_000. Añadimos para pérdida neta.
     await activity("bet", 7_000n); // total bet hoy = 10_000
     await activity("win", 2_000n); // win = 2_000 → pérdida neta 8_000
-    await rg.setLimit(userId, "daily_loss", 5_000n); // tope pérdida 50 FUN
-    // pérdida neta 80 FUN >= 50 → bloquea cualquier apuesta
+    await rg.setLimit(userId, "daily_loss", 5_000n); // tope pérdida 50 USD
+    // pérdida neta 80 USD >= 50 → bloquea cualquier apuesta
     await expect(rg.assertWithinLimits(userId, 100n)).rejects.toMatchObject({ kind: "daily_loss" });
     await rg.removeLimit(userId, "daily_loss");
   });

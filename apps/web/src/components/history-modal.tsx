@@ -77,7 +77,7 @@ export function HistoryModal({ onClose }: { onClose: () => void }) {
                     <div className="text-right">
                       <div className={`text-sm font-semibold ${m.sign > 0 ? "text-win" : "text-ink"}`}>
                         {m.sign > 0 ? "+" : "−"}
-                        {fun(t.amount)} FUN
+                        {fun(t.amount)} USD
                       </div>
                       {t.balanceAfter !== null && <div className="text-[0.65rem] text-ink-mute">saldo {fun(t.balanceAfter)}</div>}
                     </div>

@@ -31,13 +31,14 @@ export class AuthService {
     @Optional() private readonly notifications?: NotificationsService,
   ) {}
 
-  async register(data: RegisterRequest, meta: { ip?: string; userAgent?: string }): Promise<AuthTokens> {
+  /**
+   * Crea un cliente (usuario + wallet). NO emite tokens: el registro público
+   * está deshabilitado — solo el operador crea cuentas (web privada). El admin
+   * llama a este método desde su panel.
+   */
+  async createUser(data: RegisterRequest): Promise<{ id: string; username: string; email: string }> {
     const passwordHash = await argon2.hash(data.password, { type: argon2.argon2id });
-
     try {
-      // Usuario + wallet en la misma transacción: no puede existir user sin wallet.
-      // El wallet nace a 0; el saldo de bienvenida lo acreditará el Wallet Service (S2)
-      // como transacción con asiento en el ledger — regla 2 de CLAUDE.md.
       const user = await this.prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: { email: data.email, username: data.username, passwordHash },
@@ -46,12 +47,10 @@ export class AuthService {
         return created;
       });
       await this.notifications?.create(user.id, "welcome", {});
-      return this.issueTokens(user, meta);
+      return { id: user.id, username: user.username, email: user.email };
     } catch (e: unknown) {
-      // Violación de UNIQUE (email o username ya existen).
-      // Mensaje deliberadamente genérico: no revelamos cuál de los dos (Cap. 8.4, enumeración).
       if (typeof e === "object" && e !== null && "code" in e && (e as { code: string }).code === "P2002") {
-        apiError(409, "ALREADY_REGISTERED", "No se pudo crear la cuenta con esos datos");
+        apiError(409, "ALREADY_REGISTERED", "Ya existe un cliente con ese email o usuario");
       }
       throw e;
     }

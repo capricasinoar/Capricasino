@@ -1,5 +1,5 @@
 // @capri/contracts — fuente de verdad de los contratos de API (docs/architecture.md Cap. 7)
-// Convención: montos SIEMPRE en unidad mínima de FUN (centavos ficticios), como entero.
+// Convención: montos SIEMPRE en unidad mínima de USD (centavos ficticios), como entero.
 import { z } from "zod";
 
 // ── Auth (Cap. 7.1) ──────────────────────────────────────────────────
@@ -34,7 +34,7 @@ export const BalanceResponse = z.object({
   cash: z.number().int().nonnegative(),
   bonus: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
-  currency: z.literal("FUN"),
+  currency: z.literal("USD"),
 });
 export type BalanceResponse = z.infer<typeof BalanceResponse>;
 
@@ -139,7 +139,7 @@ export const ProviderCallbackResponse = z.object({
   status: ProviderCallbackStatus,
   balance: z.number().int().nonnegative().optional(),
   transactionId: z.string().optional(),
-  currency: z.literal("FUN").optional(),
+  currency: z.literal("USD").optional(),
 });
 export type ProviderCallbackResponse = z.infer<typeof ProviderCallbackResponse>;
 

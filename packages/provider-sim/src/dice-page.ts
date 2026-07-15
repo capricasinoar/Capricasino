@@ -64,7 +64,7 @@ export function dicePage(token: string): string {
 
     <div class="row" style="margin-top:12px">
       <div>
-        <label for="amount">Apuesta (FUN)</label>
+        <label for="amount">Apuesta (USD)</label>
         <input type="number" id="amount" min="1" step="1" value="10">
       </div>
       <div>
@@ -90,7 +90,7 @@ export function dicePage(token: string): string {
 <script>
 const token = ${JSON.stringify(token)};
 const $ = (id) => document.getElementById(id);
-const fun = (c) => (c/100).toLocaleString('es-ES',{minimumFractionDigits:2}) + ' FUN';
+const fun = (c) => (c/100).toLocaleString('es-ES',{minimumFractionDigits:2}) + ' USD';
 
 function syncTarget(){
   const t = Number($('target').value);

@@ -6,16 +6,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "CAPRI CASINO — Casino online play money · Juega gratis",
-  description:
-    "La experiencia de casino premium con dinero 100% ficticio. Juegos originals provably fair, slots y crash. 100.000 FUN de bienvenida. Sin riesgo real, +18.",
+  title: "CAPRI CASINO — Acceso privado",
+  description: "Acceso exclusivo para clientes de CAPRI CASINO.",
+  robots: { index: false, follow: false }, // web privada: no se indexa
   // Nota: sin meta de Twitter Cards por decisión del propietario.
-  openGraph: {
-    title: "CAPRI CASINO",
-    description: "El lujo de Capri, la emoción del casino. 100% play money.",
-    type: "website",
-    locale: "es_ES",
-  },
 };
 
 export const viewport: Viewport = {

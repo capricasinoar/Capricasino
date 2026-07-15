@@ -78,7 +78,7 @@ export class GamesController {
     const { gameUrl } = await adapter.launch({
       gameCode: game.code,
       playerToken: launchToken,
-      currency: "FUN",
+      currency: "USD",
       language: "es",
     });
 

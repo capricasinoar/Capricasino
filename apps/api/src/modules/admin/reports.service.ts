@@ -100,7 +100,7 @@ export class ReportsService {
     });
   }
 
-  /** CSV de actividad por cliente (montos en FUN con 2 decimales). */
+  /** CSV de actividad por cliente (montos en USD con 2 decimales). */
   async clientActivityCsv(): Promise<string> {
     const rows = await this.clientActivity();
     const fun = (c: number) => (c / 100).toFixed(2);

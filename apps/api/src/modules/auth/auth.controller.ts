@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { LoginRequest, RegisterRequest } from "@capri/contracts";
+import { LoginRequest } from "@capri/contracts";
 import { ZodValidationPipe } from "../../shared/zod-validation.pipe";
 import { AuthService, type AuthTokens } from "./auth.service";
 import { JwtAuthGuard, CurrentUser, type JwtPayload } from "./jwt-auth.guard";
@@ -26,23 +26,12 @@ function toBody(tokens: AuthTokens) {
   return body;
 }
 
-// Login y registro: tope estricto contra fuerza bruta (Cap. 8.4), por IP.
+// Web PRIVADA: no hay registro público. Solo el operador crea cuentas (panel
+// admin). Login con tope estricto contra fuerza bruta (Cap. 8.4), por IP.
 @Throttle({ default: { limit: 8, ttl: 60_000 } })
 @Controller("auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
-
-  @Post("register")
-  async register(
-    @Body(new ZodValidationPipe(RegisterRequest)) body: RegisterRequest,
-    @Req() req: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply,
-  ) {
-    const tokens = await this.auth.register(body, { ip: req.ip, userAgent: req.headers["user-agent"] });
-    setRefreshCookie(reply, tokens.refreshToken);
-    reply.status(201);
-    return toBody(tokens);
-  }
 
   @Post("login")
   @HttpCode(200)

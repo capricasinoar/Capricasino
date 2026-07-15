@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 // Consultas de solo lectura del panel. Los montos se devuelven como number
-// (unidad mínima FUN); el frontend divide por 100 para mostrar.
+// (unidad mínima USD); el frontend divide por 100 para mostrar.
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}

@@ -129,6 +129,8 @@ export const adminApi = {
   disable2fa: (code: string) => req<{ enabled: boolean }>("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ code }) }),
   dashboard: () => req<Dashboard>("/dashboard"),
   users: (search?: string) => req<UserRow[]>(`/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  createUser: (body: { email: string; username: string; password: string; initialBalance?: number }) =>
+    req<{ id: string; username: string; email: string; balance: number }>("/users", { method: "POST", body: JSON.stringify(body) }),
   user: (id: string) => req<UserDetail>(`/users/${id}`),
   adjust: (id: string, kind: "deposit" | "withdrawal", amount: number, reason: string) =>
     req<{ balanceBefore: number; balanceAfter: number }>(`/users/${id}/adjust`, {
@@ -161,5 +163,5 @@ export async function downloadClientActivityCsv() {
 }
 
 export function fun(cents: number) {
-  return new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2 }).format(cents / 100) + " FUN";
+  return new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2 }).format(cents / 100) + " USD";
 }

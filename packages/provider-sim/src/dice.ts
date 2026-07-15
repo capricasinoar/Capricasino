@@ -74,7 +74,7 @@ export interface DiceResult {
   clientSeed: string;
 }
 
-/** target: 2..98 (gana si roll < target%). Montos en unidad mínima (centavos FUN). */
+/** target: 2..98 (gana si roll < target%). Montos en unidad mínima (centavos USD). */
 export function playDice(s: DiceSession, amount: number, target: number): DiceResult {
   const rollValue = roll(s);
   const win = rollValue < target * 100;

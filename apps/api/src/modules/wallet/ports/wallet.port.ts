@@ -1,6 +1,6 @@
 // Puerto del Wallet Service (docs/architecture.md Cap. 5.6) — el contrato del núcleo.
 // TODO Semana 2: implementación con Prisma (FOR UPDATE + idempotencia + ledger), TDD obligatorio.
-// Nadie mueve saldo fuera de esta interfaz. Montos en BigInt (unidad mínima FUN).
+// Nadie mueve saldo fuera de esta interfaz. Montos en BigInt (unidad mínima USD).
 
 export interface WalletBalance {
   cash: bigint;

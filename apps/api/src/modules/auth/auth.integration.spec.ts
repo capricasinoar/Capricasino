@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
 import { PrismaClient } from "@prisma/client";
+import { AuthService } from "./auth.service";
 
 const prisma = new PrismaClient();
 let dbUp = true;
@@ -55,44 +56,26 @@ run("auth (integración)", () => {
   let accessToken = "";
   let refreshCookie = "";
 
-  it("registra un usuario nuevo y crea su wallet a 0", async () => {
-    const res = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/register",
-      payload: { email, username, password },
-    });
-    expect(res.statusCode).toBe(201);
+  it("NO existe registro público: POST /auth/register da 404 (web privada)", async () => {
+    const res = await app.inject({ method: "POST", url: "/api/v1/auth/register", payload: { email, username, password } });
+    expect(res.statusCode).toBe(404);
+  });
 
-    const body = res.json();
-    expect(body.user.username).toBe(username);
-    expect(body.accessToken).toBeTruthy();
-    // El refresh token va SOLO en cookie httpOnly, nunca en el body.
-    expect(body.refreshToken).toBeUndefined();
-    expect(cookieOf(res)).toMatch(/^capri_rt=/);
+  it("el operador crea el cliente (vía AuthService) con su wallet a 0 USD", async () => {
+    const authService = app.get(AuthService);
+    const created = await authService.createUser({ email, username, password });
+    expect(created.username).toBe(username);
 
     const user = await prisma.user.findUnique({ where: { email }, include: { wallet: true } });
     expect(user?.wallet?.cashBalance).toBe(0n);
-    expect(user?.wallet?.currency).toBe("FUN");
+    expect(user?.wallet?.currency).toBe("USD");
   });
 
-  it("rechaza un registro duplicado sin revelar qué campo choca", async () => {
-    const res = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/register",
-      payload: { email, username: `otra_${suffix}`, password },
+  it("crear un cliente duplicado se rechaza sin revelar qué campo choca", async () => {
+    const authService = app.get(AuthService);
+    await expect(authService.createUser({ email, username: `otra_${suffix}`, password })).rejects.toMatchObject({
+      response: { error: { code: "ALREADY_REGISTERED" } },
     });
-    expect(res.statusCode).toBe(409);
-    expect(res.json().error.code).toBe("ALREADY_REGISTERED");
-  });
-
-  it("valida el body con Zod (contrato compartido)", async () => {
-    const res = await app.inject({
-      method: "POST",
-      url: "/api/v1/auth/register",
-      payload: { email: "no-es-email", username: "x", password: "corta" },
-    });
-    expect(res.statusCode).toBe(400);
-    expect(res.json().error.code).toBe("VALIDATION_ERROR");
   });
 
   it("login correcto devuelve access token y cookie de refresh", async () => {

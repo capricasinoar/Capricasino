@@ -49,7 +49,8 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Semana 6 — Saldo en tiempo real:** WebSocket (Socket.IO) con auth JWT, el saldo se actualiza solo tras cada apuesta/premio (evento `balance.changed`), resync REST al reconectar. La cabecera destella al cambiar
 - ✅ **Juego responsable + reporting (costuras #4 y #5):** límites diarios (apuesta/pérdida) y autoexclusión con enforcement real en launch y bet; panel de juego responsable para el jugador; reportes de GGR por día y actividad por cliente con exportación CSV en el admin, más excluir/reactivar clientes. 6 tests nuevos (38 total)
 - ✅ **Hardening de seguridad (Cap. 8):** 2FA (TOTP) para el admin con secreto cifrado (AES-GCM), rate limiting (login/registro estrictos, callbacks eximidos), cabeceras de seguridad (CSP/HSTS/anti-clickjacking vía helmet + headers en Next), y guardia que aborta el arranque en producción con secretos de desarrollo. 7 tests nuevos (45 total)
-- ✅ **Historial + notificaciones (jugador):** historial de movimientos filtrable (todos / cargas y retiros / apuestas) y centro de notificaciones con campana + badge de no leídas, push en vivo por WebSocket (bienvenida al registrarse, aviso al cargar/retirar saldo)
+- ✅ **Historial + notificaciones (jugador):** historial de movimientos filtrable (todos / cargas y retiros / apuestas) y centro de notificaciones con campana + badge de no leídas, push en vivo por WebSocket (aviso al cargar/retirar saldo)
+- ✅ **Web privada + moneda USD:** la web abre en pantalla de login; sin registro público — solo el operador crea clientes (panel admin → "Nuevo cliente", con saldo inicial opcional). Toda la interfaz muestra **USD**
 - ⏳ Siguiente — despliegue y observabilidad (Docker completo, métricas, deploy)
 
 ## Acceso al panel de administración

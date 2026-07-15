@@ -98,7 +98,7 @@ run("provider callbacks (resiliencia, integración)", () => {
 
   it("balance responde el cash del wallet", async () => {
     const res = await callback(signed({ action: "balance", token }));
-    expect(res.body).toMatchObject({ status: "OK", balance: 10_000, currency: "FUN" });
+    expect(res.body).toMatchObject({ status: "OK", balance: 10_000, currency: "USD" });
   });
 
   it("bet descuenta y crea la ronda; win liquida la ronda", async () => {

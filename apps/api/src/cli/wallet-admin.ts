@@ -4,7 +4,7 @@
 //   pnpm admin deposit  cliente@email.com 500        "Carga inicial"
 //   pnpm admin withdraw cliente@email.com 200        "Retiro solicitado"
 //   pnpm admin history  cliente@email.com [n]
-// Montos en FUN (se convierten a unidad mínima, x100, internamente).
+// Montos en USD (se convierten a unidad mínima, x100, internamente).
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PrismaClient } from "@prisma/client";
@@ -31,13 +31,13 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "owner@capri.local";
 function fun(unidadMinima: bigint): string {
   const sign = unidadMinima < 0n ? "-" : "";
   const abs = unidadMinima < 0n ? -unidadMinima : unidadMinima;
-  return `${sign}${abs / 100n}.${(abs % 100n).toString().padStart(2, "0")} FUN`;
+  return `${sign}${abs / 100n}.${(abs % 100n).toString().padStart(2, "0")} USD`;
 }
 
 async function main() {
   const [cmd, email, amountArg, ...reasonParts] = process.argv.slice(2);
   if (!cmd || !email) {
-    console.log("Uso: pnpm admin <balance|deposit|withdraw|history> <email> [monto FUN] [razón]");
+    console.log("Uso: pnpm admin <balance|deposit|withdraw|history> <email> [monto USD] [razón]");
     process.exit(1);
   }
 

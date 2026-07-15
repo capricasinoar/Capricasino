@@ -8,6 +8,7 @@ import { apiError } from "../../shared/api-error";
 import { PaymentsService } from "../payments/payments.service";
 import { WalletError } from "../wallet/wallet.service";
 import { ResponsibleService } from "../responsible/responsible.service";
+import { AuthService } from "../auth/auth.service";
 import { AdminAuthService, type AdminJwtPayload } from "./admin-auth.service";
 import { AdminAuthGuard, CurrentAdmin, Roles } from "./admin-auth.guard";
 import { AdminService } from "./admin.service";
@@ -20,13 +21,19 @@ const LoginBody = z.object({
 });
 const CodeBody = z.object({ code: z.string().regex(/^\d{6}$/) });
 const AdjustBody = z.object({
-  amount: z.number().int().positive(), // en unidad mínima FUN (centavos)
+  amount: z.number().int().positive(), // en unidad mínima USD (centavos)
   kind: z.enum(["deposit", "withdrawal"]),
   reason: z.string().max(280).optional(),
 });
 const ExcludeBody = z.object({
   days: z.number().int().positive().nullable(), // null = permanente
   reason: z.string().max(280).optional(),
+});
+const CreateUserBody = z.object({
+  email: z.string().email(),
+  username: z.string().min(3).max(24).regex(/^[a-zA-Z0-9_]+$/),
+  password: z.string().min(8).max(128),
+  initialBalance: z.number().int().nonnegative().optional(), // USD en centavos
 });
 
 @Controller("admin/v1")
@@ -37,6 +44,7 @@ export class AdminController {
     private readonly payments: PaymentsService,
     private readonly reports: ReportsService,
     private readonly rg: ResponsibleService,
+    private readonly userAuth: AuthService,
   ) {}
 
   // ── Auth (sin guard) ── Login de admin con tope estricto (fuerza bruta).
@@ -92,6 +100,28 @@ export class AdminController {
   @UseGuards(AdminAuthGuard)
   users(@Query("search") search?: string) {
     return this.admin.listUsers(search);
+  }
+
+  // Crear cliente (web privada: solo el operador da de alta). Saldo inicial opcional.
+  @Post("users")
+  @UseGuards(AdminAuthGuard)
+  @Roles("finance")
+  async createUser(
+    @Body(new ZodValidationPipe(CreateUserBody)) body: z.infer<typeof CreateUserBody>,
+    @CurrentAdmin() admin: AdminJwtPayload,
+  ) {
+    const user = await this.userAuth.createUser({ email: body.email, username: body.username, password: body.password });
+    let balance = 0;
+    if (body.initialBalance && body.initialBalance > 0) {
+      const op = await this.payments.manualDeposit({
+        userId: user.id,
+        amount: BigInt(body.initialBalance),
+        adminUserId: admin.sub,
+        reason: "Saldo inicial (alta de cliente)",
+      });
+      balance = Number(op.balanceAfter);
+    }
+    return { id: user.id, username: user.username, email: user.email, balance };
   }
 
   @Get("users/:id")

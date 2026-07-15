@@ -33,7 +33,7 @@ export class ProviderService {
       switch (cb.action) {
         case "balance": {
           const b = await this.wallet.getBalance(userId);
-          return { status: "OK", balance: Number(b.cash), currency: "FUN" };
+          return { status: "OK", balance: Number(b.cash), currency: "USD" };
         }
 
         case "bet": {

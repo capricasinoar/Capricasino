@@ -15,7 +15,7 @@ function timeAgo(iso: string): string {
 }
 
 function render(n: NotificationRow): { title: string; body: string; tone: string } {
-  const amount = n.payload?.amount ? `${fun(n.payload.amount)} FUN` : "";
+  const amount = n.payload?.amount ? `${fun(n.payload.amount)} USD` : "";
   const reason = n.payload?.reason ? ` · ${n.payload.reason}` : "";
   switch (n.type) {
     case "deposit":

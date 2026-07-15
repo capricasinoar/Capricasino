@@ -16,7 +16,7 @@ export class WalletController {
   @Get("balance")
   async balance(@CurrentUser() user: JwtPayload) {
     const b = await this.wallet.getBalance(user.sub);
-    return { cash: Number(b.cash), bonus: Number(b.bonus), total: Number(b.total), currency: "FUN" };
+    return { cash: Number(b.cash), bonus: Number(b.bonus), total: Number(b.total), currency: "USD" };
   }
 
   // Historial: el cliente ve TODAS sus cargas, retiradas, apuestas y premios.

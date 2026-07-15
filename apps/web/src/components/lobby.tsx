@@ -9,7 +9,6 @@ import Link from "next/link";
 import { fetchCatalog, fetchCategories, type CatalogGame, type Category } from "@/lib/catalog";
 import { GameCard } from "./game-card";
 import { Logo } from "./logo";
-import { AuthModal } from "./auth-modal";
 import { GameFrame } from "./game-frame";
 import { ResponsibleModal } from "./responsible-modal";
 import { NotificationsBell } from "./notifications-bell";
@@ -50,7 +49,7 @@ function BalancePill({ cash }: { cash: number }) {
       title="Saldo en tiempo real"
     >
       <span className="h-1.5 w-1.5 rounded-full bg-win" aria-hidden />
-      {formatFun(cash)} <span className="text-[0.65rem] font-bold">FUN</span>
+      {formatFun(cash)} <span className="text-[0.65rem] font-bold">USD</span>
     </div>
   );
 }
@@ -65,12 +64,12 @@ export function Lobby() {
   const [loadError, setLoadError] = useState(false);
   const [info, setInfo] = useState<CatalogGame | null>(null);
   const [playing, setPlaying] = useState<CatalogGame | null>(null);
-  const [authOpen, setAuthOpen] = useState(false);
   const [rgOpen, setRgOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
-    session.bootstrap();
+    // La sesión ya está abierta (el portero AppGate solo muestra el lobby
+    // cuando hay usuario); aquí solo cargamos el catálogo.
     Promise.all([fetchCatalog(), fetchCategories()])
       .then(([games, cats]) => {
         setAllGames(games);
@@ -100,10 +99,6 @@ export function Lobby() {
       setInfo(game);
       return;
     }
-    if (!player.user) {
-      setAuthOpen(true);
-      return;
-    }
     setPlaying(game);
   }
 
@@ -131,44 +126,32 @@ export function Lobby() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            {player.user ? (
-              <>
-                <BalancePill cash={player.cash} />
-                <NotificationsBell />
-                <button
-                  type="button"
-                  onClick={() => setHistoryOpen(true)}
-                  className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
-                  title="Historial de movimientos"
-                >
-                  Historial
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRgOpen(true)}
-                  className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
-                  title="Juego responsable"
-                >
-                  Límites
-                </button>
-                <button
-                  type="button"
-                  onClick={() => session.logout()}
-                  className="hidden cursor-pointer rounded-full border border-line px-4 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink md:block"
-                  title={`Sesión de ${player.user.username}`}
-                >
-                  Salir
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="cursor-pointer rounded-full bg-gold px-4 py-2 text-sm font-bold text-night transition-colors duration-200 hover:bg-gold-bright"
-              >
-                Entrar
-              </button>
-            )}
+            <BalancePill cash={player.cash} />
+            <NotificationsBell />
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
+              title="Historial de movimientos"
+            >
+              Historial
+            </button>
+            <button
+              type="button"
+              onClick={() => setRgOpen(true)}
+              className="hidden cursor-pointer rounded-full border border-line px-3 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink sm:block"
+              title="Juego responsable"
+            >
+              Límites
+            </button>
+            <button
+              type="button"
+              onClick={() => session.logout()}
+              className="hidden cursor-pointer rounded-full border border-line px-4 py-2 text-sm text-ink-soft transition-colors duration-200 hover:border-gold/60 hover:text-ink md:block"
+              title={player.user ? `Sesión de ${player.user.username}` : undefined}
+            >
+              Salir
+            </button>
           </div>
         </div>
       </header>
@@ -216,14 +199,9 @@ export function Lobby() {
             })}
           </div>
 
-          {player.ready && !player.user && (
-            <div className="mb-6 rounded-xl border border-azure/30 bg-azure/5 px-4 py-3 text-sm text-ink-soft">
-              Entra a tu cuenta para jugar. <strong className="text-azure">Capri Dice</strong> ya apuesta de verdad contra tu saldo.
-            </div>
-          )}
-          {player.ready && player.user && player.cash === 0 && (
+          {player.cash === 0 && (
             <div className="mb-6 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3 text-sm text-ink-soft">
-              Tu saldo es 0 FUN. Pídele a tu operador que te cargue saldo para empezar a jugar.
+              Tu saldo es 0 USD. Pídele a tu operador que te cargue saldo para empezar a jugar.
             </div>
           )}
 
@@ -280,13 +258,12 @@ export function Lobby() {
       </div>
 
       <nav className="glass fixed inset-x-0 bottom-0 z-40 flex justify-around py-2.5 md:hidden" aria-label="Navegación móvil">
-        <Link href="/" className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Portada</Link>
+        <button type="button" onClick={() => setCategory("todos")} className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Todos</button>
         <button type="button" onClick={() => setCategory("originals")} className="cursor-pointer px-4 py-1 text-xs font-medium text-gold-bright">Originals</button>
         <button type="button" onClick={() => setCategory("slots")} className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Slots</button>
-        <Link href="/#promos" className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Promos</Link>
+        <button type="button" onClick={() => setHistoryOpen(true)} className="cursor-pointer px-4 py-1 text-xs font-medium text-ink-soft">Historial</button>
       </nav>
 
-      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {rgOpen && <ResponsibleModal onClose={() => setRgOpen(false)} />}
       {historyOpen && <HistoryModal onClose={() => setHistoryOpen(false)} />}
       {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
