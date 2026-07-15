@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { VipService } from "../vip/vip.service";
 
 // Consultas de solo lectura del panel. Los montos se devuelven como number
 // (unidad mínima USD); el frontend divide por 100 para mostrar.
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly vip: VipService,
+  ) {}
 
   /** KPIs del dashboard (Cap. 10). GGR = apuestas − premios. */
   async dashboard() {
@@ -79,12 +83,16 @@ export class AdminService {
       }),
     ]);
 
+    const vip = await this.vip.status(userId);
+
     return {
       id: user.id,
       email: user.email,
       username: user.username,
       status: user.status,
       vipLevel: user.vipLevel,
+      vipTier: vip.tier,
+      totalWagered: vip.totalWagered,
       createdAt: user.createdAt.toISOString(),
       cash: Number(user.wallet?.cashBalance ?? 0),
       bonus: Number(user.wallet?.bonusBalance ?? 0),

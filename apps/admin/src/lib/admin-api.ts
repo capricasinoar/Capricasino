@@ -77,6 +77,8 @@ export interface TxRow {
   ledger: LedgerLeg[];
 }
 export interface UserDetail extends UserRow {
+  vipTier?: string;
+  totalWagered?: number;
   transactions: TxRow[];
   sessions: { id: string; game: string; status: string; startedAt: string }[];
 }

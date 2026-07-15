@@ -51,6 +51,12 @@ export function ClientDetail({ id, role, onBack }: { id: string; role: string; o
             <p className="mt-3 text-xs text-ink-mute">
               Estado: <span className="text-ink-soft">{data.status}</span> · alta {data.createdAt.slice(0, 10)}
             </p>
+            {data.vipTier && (
+              <p className="mt-1 text-xs text-ink-mute">
+                VIP: <span className="text-gold-bright">{data.vipTier}</span>
+                {typeof data.totalWagered === "number" && <> · apostado {fun(data.totalWagered)}</>}
+              </p>
+            )}
           </div>
 
           {canAdjust ? (

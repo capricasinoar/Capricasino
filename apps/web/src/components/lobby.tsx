@@ -13,6 +13,7 @@ import { GameFrame } from "./game-frame";
 import { ResponsibleModal } from "./responsible-modal";
 import { NotificationsBell } from "./notifications-bell";
 import { HistoryModal } from "./history-modal";
+import { VipModal } from "./vip-modal";
 import { session, usePlayerSession } from "@/lib/session-store";
 
 const FIXED_CATEGORIES: { slug: string; name: string }[] = [
@@ -66,6 +67,7 @@ export function Lobby() {
   const [playing, setPlaying] = useState<CatalogGame | null>(null);
   const [rgOpen, setRgOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [vipOpen, setVipOpen] = useState(false);
 
   useEffect(() => {
     // La sesión ya está abierta (el portero AppGate solo muestra el lobby
@@ -128,6 +130,14 @@ export function Lobby() {
           <div className="flex shrink-0 items-center gap-2">
             <BalancePill cash={player.cash} />
             <NotificationsBell />
+            <button
+              type="button"
+              onClick={() => setVipOpen(true)}
+              className="hidden cursor-pointer rounded-full border border-gold/40 px-3 py-2 text-sm font-medium text-gold-bright transition-colors duration-200 hover:bg-gold/10 sm:block"
+              title="Club VIP"
+            >
+              VIP
+            </button>
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
@@ -265,6 +275,7 @@ export function Lobby() {
       </nav>
 
       {rgOpen && <ResponsibleModal onClose={() => setRgOpen(false)} />}
+      {vipOpen && <VipModal onClose={() => setVipOpen(false)} />}
       {historyOpen && <HistoryModal onClose={() => setHistoryOpen(false)} />}
       {playing && <GameFrame game={playing} onClose={() => setPlaying(null)} />}
 

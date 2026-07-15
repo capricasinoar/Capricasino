@@ -72,6 +72,9 @@ export const api = {
     request<{ unread: number }>("/notifications/read", { method: "POST", body: JSON.stringify({ ids }) }),
   markAllNotificationsRead: () => request<{ unread: number }>("/notifications/read-all", { method: "POST" }),
 
+  // Club VIP
+  vipStatus: () => request<VipStatus>("/vip/status"),
+
   // Juego responsable (del propio jugador)
   rgStatus: () => request<RgStatus>("/responsible-gaming/status"),
   rgSetLimit: (kind: RgLimitKind, value: number) =>
@@ -105,6 +108,18 @@ export interface NotificationsPage {
   items: NotificationRow[];
   nextCursor: string | null;
   unread: number;
+}
+
+export interface VipStatus {
+  level: number;
+  tier: string;
+  cashbackPct: number;
+  perks: string;
+  totalWagered: number;
+  nextTier: string | null;
+  wageredToNext: number;
+  progressPct: number;
+  tiers: { name: string; minWagered: number; cashbackPct: number; perks: string }[];
 }
 
 export type RgLimitKind = "daily_wager" | "daily_loss" | "session_reminder";

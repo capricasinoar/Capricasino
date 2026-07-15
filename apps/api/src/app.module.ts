@@ -15,6 +15,7 @@ import { GamesModule } from "./modules/games/games.module";
 import { SimModule } from "./modules/sim/sim.module";
 import { ResponsibleModule } from "./modules/responsible/responsible.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
+import { VipModule } from "./modules/vip/vip.module";
 import { AdminModule } from "./modules/admin/admin.module";
 
 // Monolito modular: cada módulo es una rebanada vertical con frontera estricta.
@@ -37,6 +38,7 @@ import { AdminModule } from "./modules/admin/admin.module";
     SimModule,
     ResponsibleModule,
     NotificationsModule,
+    VipModule,
     RealtimeModule,
     AdminModule,
   ],
