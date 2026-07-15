@@ -2,6 +2,8 @@
   "name": "@capri/provider-sim",
   "version": "0.1.0",
   "private": true,
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",

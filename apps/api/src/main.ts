@@ -30,18 +30,23 @@ export async function createApp(): Promise<NestFastifyApplication> {
     logger: process.env.NODE_ENV === "test" ? false : ["log", "warn", "error"],
   });
   await app.register(fastifyCookie);
-  // Cabeceras de seguridad (Cap. 8.4): CSP, anti-clickjacking, HSTS, nosniff.
+  // Cabeceras de seguridad (Cap. 8.4). La API sirve JSON + la página del juego
+  // (/sim), que se embebe en un iframe desde la web y ejecuta script inline;
+  // por eso: script/style inline permitidos y framing controlado por
+  // frame-ancestors (no X-Frame-Options, que bloquea el iframe cross-origin).
+  const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        // los juegos se sirven en iframe desde el proveedor (hoy provider-sim)
-        frameSrc: ["'self'", process.env.PROVIDER_SIM_URL ?? "http://localhost:4100"],
-        connectSrc: ["'self'", ...(process.env.WEB_ORIGIN ? [process.env.WEB_ORIGIN] : [])],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'", webOrigin],
+        frameAncestors: ["'self'", webOrigin],
       },
     },
-    // Esta API no se embebe en iframes de nadie.
-    frameguard: { action: "deny" },
+    frameguard: false, // el /sim se embebe vía CSP frame-ancestors, no X-Frame-Options
   });
   // Socket.IO para el saldo en tiempo real (Cap. 9), sobre el mismo servidor HTTP.
   app.useWebSocketAdapter(new IoAdapter(app));
@@ -52,6 +57,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
       { path: "provider/v1/callback", method: RequestMethod.ALL },
       { path: "admin/v1/(.*)", method: RequestMethod.ALL },
       { path: "metrics", method: RequestMethod.GET }, // scrape de Prometheus
+      { path: "sim/(.*)", method: RequestMethod.ALL }, // motor de juego embebido
     ],
   });
   app.enableCors({

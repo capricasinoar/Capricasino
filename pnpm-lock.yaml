@@ -58,6 +58,9 @@ importers:
       '@capri/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@capri/provider-sim':
+        specifier: workspace:*
+        version: link:../../packages/provider-sim
       '@fastify/cookie':
         specifier: ^11.0.0
         version: 11.1.1

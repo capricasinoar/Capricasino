@@ -10,6 +10,7 @@ import { SimProviderAdapter } from "./adapters/sim-provider.adapter";
   imports: [WalletModule, ResponsibleModule],
   controllers: [ProviderController],
   providers: [ProviderService, SimProviderAdapter, ProviderRegistry],
-  exports: [ProviderRegistry], // los demás módulos hablan con el registro, no con adapters concretos
+  // ProviderService se exporta para el motor de juego embebido (SimModule).
+  exports: [ProviderRegistry, ProviderService],
 })
 export class ProviderModule {}

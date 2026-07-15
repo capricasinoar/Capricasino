@@ -12,6 +12,7 @@ import { WalletModule } from "./modules/wallet/wallet.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
 import { ProviderModule } from "./modules/provider/provider.module";
 import { GamesModule } from "./modules/games/games.module";
+import { SimModule } from "./modules/sim/sim.module";
 import { ResponsibleModule } from "./modules/responsible/responsible.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { AdminModule } from "./modules/admin/admin.module";
@@ -33,6 +34,7 @@ import { AdminModule } from "./modules/admin/admin.module";
     PaymentsModule,
     ProviderModule,
     GamesModule,
+    SimModule,
     ResponsibleModule,
     NotificationsModule,
     RealtimeModule,

@@ -10,7 +10,9 @@ WORKDIR /repo
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm exec prisma generate
-RUN pnpm --filter @capri/contracts build && pnpm --filter @capri/api build
+# Compila los paquetes de workspace que la API importa (contracts + provider-sim
+# para el motor de juego embebido) antes de la API.
+RUN pnpm --filter @capri/contracts build && pnpm --filter @capri/provider-sim build && pnpm --filter @capri/api build
 EXPOSE 4000
 # Arranque: migraciones (seguro en prod) + seed idempotente (no bloquea) + API.
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma && (node_modules/.bin/tsx prisma/seed.ts || echo 'seed omitido') && node apps/api/dist/main.js"]

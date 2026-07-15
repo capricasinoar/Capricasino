@@ -1,6 +1,8 @@
 // Página HTML autocontenida del juego Dice (la sirve el provider-sim y el
 // casino la abre en un <iframe>, igual que un juego de Pragmatic/BGaming).
-export function dicePage(token: string): string {
+// `base` es el prefijo de las rutas de API (vacío como servidor propio;
+// "/sim" cuando corre integrado dentro de la API del operador).
+export function dicePage(token: string, base = ""): string {
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -89,6 +91,7 @@ export function dicePage(token: string): string {
 </div>
 <script>
 const token = ${JSON.stringify(token)};
+const BASE = ${JSON.stringify(base)};
 const $ = (id) => document.getElementById(id);
 const fun = (c) => (c/100).toLocaleString('es-ES',{minimumFractionDigits:2}) + ' USD';
 
@@ -103,7 +106,7 @@ $('target').addEventListener('input', syncTarget);
 syncTarget();
 
 async function state(){
-  const r = await fetch('/api/dice/state?token=' + encodeURIComponent(token));
+  const r = await fetch(BASE + '/api/dice/state?token=' + encodeURIComponent(token));
   const s = await r.json();
   if (s.error){ $('err').textContent = s.error; return; }
   $('balance').textContent = fun(s.balance);
@@ -119,7 +122,7 @@ $('play').addEventListener('click', async () => {
   if (!amount || amount <= 0){ $('err').textContent = 'Apuesta inválida'; return; }
   $('play').disabled = true;
   try {
-    const r = await fetch('/api/dice/roll', {
+    const r = await fetch(BASE + '/api/dice/roll', {
       method:'POST', headers:{'content-type':'application/json'},
       body: JSON.stringify({ token, amount, target: Number($('target').value) })
     });
