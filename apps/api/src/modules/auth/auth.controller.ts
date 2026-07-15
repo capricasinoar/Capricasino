@@ -8,13 +8,16 @@ import { JwtAuthGuard, CurrentUser, type JwtPayload } from "./jwt-auth.guard";
 
 export const REFRESH_COOKIE = "capri_rt";
 
-// La cookie solo viaja a los endpoints de auth (path), inaccesible a JS (httpOnly)
-// y solo mismo sitio (SameSite=Strict) — Cap. 8.1.
+// Cookie de refresh: httpOnly (inaccesible a JS), path acotado a /auth.
+// En producción web y API viven en dominios distintos (Vercel ↔ Railway), así
+// que la cookie DEBE ser SameSite=None + Secure para viajar entre ambos y que
+// la sesión persista al recargar. En dev (mismo host, http) usamos Lax.
 function setRefreshCookie(reply: FastifyReply, token: string) {
+  const prod = process.env.NODE_ENV === "production";
   reply.setCookie(REFRESH_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: prod, // None exige Secure; en prod hay HTTPS
+    sameSite: prod ? "none" : "lax",
     path: "/api/v1/auth",
     maxAge: 30 * 24 * 60 * 60,
   });
