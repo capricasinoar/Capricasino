@@ -33,7 +33,16 @@ export class AdminAuthService {
 
     // 2FA obligatorio si está ACTIVO (no si está en configuración pendiente).
     if (admin.totpSecret) {
-      const secret = decryptSecret(admin.totpSecret);
+      let secret: string;
+      try {
+        secret = decryptSecret(admin.totpSecret);
+      } catch {
+        // El secreto no se puede descifrar (p.ej. ADMIN_TOTP_KEY cambió).
+        // Error claro en vez de un 500 opaco.
+        throw new UnauthorizedException({
+          error: { code: "TWO_FACTOR_UNAVAILABLE", message: "No se puede verificar el 2FA. Revisa ADMIN_TOTP_KEY." },
+        });
+      }
       const active = !secret.startsWith("pending:");
       if (active) {
         if (!code) {
@@ -92,7 +101,14 @@ export class AdminAuthService {
 
   async status(adminId: string) {
     const admin = await this.prisma.adminUser.findUniqueOrThrow({ where: { id: adminId } });
-    const active = !!admin.totpSecret && !decryptSecret(admin.totpSecret).startsWith("pending:");
+    let active = false;
+    if (admin.totpSecret) {
+      try {
+        active = !decryptSecret(admin.totpSecret).startsWith("pending:");
+      } catch {
+        active = false; // no descifrable → tratar como no activo
+      }
+    }
     return { email: admin.email, role: admin.role, twoFactorEnabled: active };
   }
 
