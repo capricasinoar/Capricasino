@@ -1,0 +1,649 @@
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     CAPRI CASINO · Game Aggregation Partnership Proposal
+     Premium B2B deck — dark ground, single emerald accent.
+     System type (SF Pro-class) + mono utility face. Print → PDF ready.
+  ───────────────────────────────────────────────────────────────── */
+  :root {
+    --ground: #0a0c0e;
+    --ground-2: #0d1013;
+    --surface: #121519;
+    --surface-2: #161a1f;
+    --line: #20262c;
+    --line-soft: #191e23;
+    --ink: #e9edf0;
+    --ink-2: #b6bec6;
+    --muted: #7c8791;
+    --faint: #4d565e;
+    --accent: #3ecf8e;
+    --accent-dim: #2aa876;
+    --accent-deep: #0e3f2c;
+    --accent-glow: rgba(62, 207, 142, 0.14);
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .deck { max-width: 920px; margin: 0 auto; }
+
+  /* Page rhythm — each .page becomes a PDF page */
+  .page {
+    position: relative;
+    padding: 64px 72px 72px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .page + .page { break-before: page; }
+  .page__num {
+    position: absolute; top: 34px; right: 72px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    color: var(--faint);
+  }
+  .page__brand {
+    position: absolute; top: 34px; left: 72px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+    color: var(--faint); text-transform: uppercase;
+  }
+
+  /* Typography */
+  .eyebrow {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 18px;
+    display: inline-flex; align-items: center; gap: 9px;
+  }
+  .eyebrow::before { content: ""; width: 18px; height: 1px; background: var(--accent); opacity: 0.7; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+  h2 { font-size: 33px; line-height: 1.12; }
+  h3 { font-size: 18px; letter-spacing: -0.01em; }
+  .lead { font-size: 17px; line-height: 1.62; color: var(--ink-2); margin: 18px 0 0; max-width: 60ch; }
+  p { line-height: 1.62; color: var(--ink-2); }
+  strong { color: var(--ink); font-weight: 600; }
+  .section-head { margin-bottom: 34px; }
+
+  /* Cover */
+  .cover {
+    min-height: 96vh; padding: 76px 72px 64px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background:
+      radial-gradient(120% 80% at 78% 8%, var(--accent-glow), transparent 55%),
+      linear-gradient(180deg, var(--ground-2), var(--ground));
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .cover__top { display: flex; align-items: center; justify-content: space-between; }
+  .brandmark { display: inline-flex; align-items: center; gap: 13px; }
+  .brandmark__word { font-size: 15px; letter-spacing: 0.34em; font-weight: 600; color: var(--ink); }
+  .brandmark__word small { display: block; font-size: 9.5px; letter-spacing: 0.5em; color: var(--muted); font-weight: 500; margin-top: 3px; }
+  .cover__doc { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; text-align: right; }
+
+  .cover__mid { padding: 8px 0 12px; }
+  .cover__tag { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent); margin: 0 0 26px; }
+  .cover h1 { font-size: 66px; line-height: 0.98; letter-spacing: -0.035em; font-weight: 650; }
+  .cover h1 .thin { color: var(--muted); font-weight: 300; }
+  .cover__sub { font-size: 19px; color: var(--ink-2); margin: 26px 0 0; max-width: 46ch; line-height: 1.5; }
+
+  .cover__bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+  .cover__meta { display: flex; gap: 40px; }
+  .cover__meta div { }
+  .cover__meta dt { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .cover__meta dd { margin: 0; font-size: 14px; color: var(--ink); }
+
+  /* Cover hero graphic */
+  .hero-svg { width: 210px; height: 150px; opacity: 0.96; }
+
+  /* Cards & grids */
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 22px 22px;
+  }
+  .card h3 { margin-bottom: 8px; }
+  .card p { font-size: 14px; margin: 0; color: var(--muted); line-height: 1.55; }
+  .icon {
+    width: 34px; height: 34px; border-radius: 9px; margin-bottom: 15px;
+    display: grid; place-items: center;
+    background: var(--accent-deep); color: var(--accent);
+    border: 1px solid rgba(62,207,142,0.22);
+  }
+  .icon svg { width: 18px; height: 18px; }
+
+  /* Feature list (checkmarks) */
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+  .checks.cols { grid-template-columns: 1fr 1fr; gap: 13px 30px; }
+  .checks li { display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+  .checks svg { width: 17px; height: 17px; flex: none; margin-top: 2px; color: var(--accent); }
+  .checks b { color: var(--ink); font-weight: 600; }
+
+  /* Split rows (we own / we want) */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel { border-radius: 14px; padding: 24px; border: 1px solid var(--line); }
+  .panel--own { background: linear-gradient(180deg, var(--surface), var(--ground-2)); }
+  .panel--want { background: linear-gradient(180deg, rgba(62,207,142,0.06), var(--ground-2)); border-color: rgba(62,207,142,0.28); }
+  .panel h3 { margin-bottom: 4px; }
+  .panel .cap { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tag { font-size: 12.5px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--ground-2); }
+  .tag--dim { color: var(--faint); text-decoration: line-through; text-decoration-color: var(--faint); }
+  .tag--on { border-color: rgba(62,207,142,0.35); color: var(--accent); background: rgba(62,207,142,0.07); }
+
+  /* Architecture flow */
+  .flow { display: grid; gap: 10px; margin-top: 6px; }
+  .node {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 15px 18px;
+  }
+  .node__k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--faint); width: 34px; flex: none; }
+  .node__b { flex: 1; }
+  .node__b b { font-size: 15px; color: var(--ink); }
+  .node__b span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .node__t { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .node--hi { border-color: rgba(62,207,142,0.4); background: linear-gradient(180deg, rgba(62,207,142,0.07), var(--surface)); }
+  .node--hi .node__k { color: var(--accent); }
+  .flow__arrow { display: flex; justify-content: center; color: var(--faint); }
+  .flow__arrow svg { width: 15px; height: 15px; }
+  .providers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .providers .tag { border-style: dashed; }
+  .socket-note { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 14px; display: flex; align-items: center; gap: 8px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line-soft); }
+  thead th { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--ground-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  td code, .mono { font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
+  td.op { color: var(--ink); }
+  .chip { font-family: var(--mono); font-size: 10.5px; padding: 3px 8px; border-radius: 6px; background: rgba(62,207,142,0.1); color: var(--accent); border: 1px solid rgba(62,207,142,0.25); }
+  .chip--plan { background: rgba(124,135,145,0.12); color: var(--muted); border-color: var(--line); }
+
+  /* Stat / scale */
+  .scale { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 8px; }
+  .scale__col { text-align: center; }
+  .scale__bar { height: 96px; display: flex; align-items: flex-end; justify-content: center; }
+  .scale__fill { width: 40px; border-radius: 7px 7px 0 0; background: linear-gradient(180deg, var(--accent), var(--accent-dim)); opacity: 0.9; }
+  .scale__n { font-size: 18px; font-weight: 600; color: var(--ink); margin-top: 12px; font-variant-numeric: tabular-nums; }
+  .scale__l { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: 0.06em; margin-top: 3px; }
+
+  /* Timeline */
+  .timeline { display: grid; gap: 0; margin-top: 4px; }
+  .tl { display: grid; grid-template-columns: 40px 1fr; gap: 18px; }
+  .tl__rail { display: flex; flex-direction: column; align-items: center; }
+  .tl__dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--accent); background: var(--ground); margin-top: 4px; }
+  .tl__dot--done { background: var(--accent); }
+  .tl__line { width: 1px; flex: 1; background: var(--line); min-height: 26px; }
+  .tl__body { padding-bottom: 22px; }
+  .tl__k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .tl__t { font-size: 15px; color: var(--ink); font-weight: 600; margin: 3px 0 3px; }
+  .tl__d { font-size: 13px; color: var(--muted); margin: 0; }
+  .tl__status { font-family: var(--mono); font-size: 10px; margin-left: 8px; padding: 2px 7px; border-radius: 5px; }
+  .st-done { background: rgba(62,207,142,0.12); color: var(--accent); }
+  .st-now { background: rgba(62,207,142,0.12); color: var(--accent); border: 1px solid rgba(62,207,142,0.3); }
+  .st-next { background: rgba(124,135,145,0.12); color: var(--muted); }
+
+  /* Contact */
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-top: 6px; }
+  .contact-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .contact-row .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 92px; flex: none; }
+  .contact-row .v { color: var(--ink); font-size: 14.5px; }
+
+  /* Placeholder token */
+  .ph {
+    font-family: var(--mono); font-size: 12.5px; color: var(--accent);
+    border: 1px dashed rgba(62,207,142,0.45); border-radius: 6px;
+    padding: 1px 7px; background: rgba(62,207,142,0.05);
+    white-space: nowrap;
+  }
+  .note {
+    margin-top: 22px; padding: 14px 16px; border-radius: 10px;
+    background: var(--ground-2); border: 1px solid var(--line);
+    font-size: 12.5px; color: var(--muted); line-height: 1.55;
+    display: flex; gap: 11px;
+  }
+  .note svg { width: 15px; height: 15px; color: var(--muted); flex: none; margin-top: 2px; }
+
+  .kicker-row { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+  .divider { height: 1px; background: var(--line-soft); margin: 30px 0; border: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .node, .card { transition: none; }
+  }
+
+  /* Print → PDF */
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: var(--ground); }
+    .deck { max-width: none; }
+    .page, .cover { border-bottom: none; }
+    .page { break-before: page; padding: 54px 58px; }
+    .cover { min-height: 100vh; break-after: page; }
+    h2 { font-size: 30px; }
+    .cover h1 { font-size: 58px; }
+  }
+
+  @media (max-width: 720px) {
+    .page, .cover { padding: 40px 24px; }
+    .page__num, .page__brand { display: none; }
+    .cover h1 { font-size: 46px; }
+    .grid-2, .grid-3, .split, .contact-grid { grid-template-columns: 1fr; }
+    .checks.cols { grid-template-columns: 1fr; }
+    .scale { grid-template-columns: 1fr 1fr; }
+    .cover__bottom, .cover__top { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .cover__meta { gap: 24px; flex-wrap: wrap; }
+  }
+</style>
+
+<div class="deck">
+
+  <!-- ══════════════════ COVER ══════════════════ -->
+  <section class="cover">
+    <div class="cover__top">
+      <div class="brandmark">
+        <svg width="42" height="42" viewBox="0 0 42 42" fill="none" aria-hidden="true">
+          <rect x="7" y="7" width="28" height="28" rx="7" transform="rotate(45 21 21)" stroke="#3ECF8E" stroke-width="1.5"/>
+          <rect x="11.5" y="11.5" width="19" height="19" rx="5" transform="rotate(45 21 21)" stroke="#E9EDF0" stroke-width="1" opacity="0.4"/>
+          <text x="21" y="26.5" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="15" font-weight="600" fill="#3ECF8E">C</text>
+        </svg>
+        <span class="brandmark__word">CAPRI<small>CASINO</small></span>
+      </div>
+      <div class="cover__doc">Partnership Proposal<br/>Confidential · <span class="ph">2025</span></div>
+    </div>
+
+    <div class="cover__mid">
+      <p class="cover__tag">Private Crypto Gaming Platform</p>
+      <h1>Game Aggregation<br/><span class="thin">Partnership Proposal</span></h1>
+      <p class="cover__sub">A fully proprietary, invitation-only gaming platform seeking to integrate premium content through a single aggregation API.</p>
+      <svg class="hero-svg" viewBox="0 0 210 150" fill="none" aria-hidden="true" style="margin-top:34px">
+        <defs>
+          <radialGradient id="g" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#3ECF8E" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#3ECF8E" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="42" cy="75" r="46" fill="url(#g)" opacity="0.18"/>
+        <!-- hub -->
+        <circle cx="42" cy="75" r="9" fill="#0a0c0e" stroke="#3ECF8E" stroke-width="1.5"/>
+        <circle cx="42" cy="75" r="3" fill="#3ECF8E"/>
+        <!-- provider nodes -->
+        <g stroke="#20262c" stroke-width="1">
+          <line x1="51" y1="70" x2="150" y2="22"/>
+          <line x1="51" y1="73" x2="150" y2="52"/>
+          <line x1="51" y1="77" x2="150" y2="82"/>
+          <line x1="51" y1="80" x2="150" y2="112"/>
+          <line x1="49" y1="82" x2="150" y2="140"/>
+        </g>
+        <g fill="#121519" stroke="#2b333a" stroke-width="1">
+          <rect x="150" y="15" width="46" height="15" rx="4"/>
+          <rect x="150" y="45" width="46" height="15" rx="4"/>
+          <rect x="150" y="75" width="46" height="15" rx="4"/>
+          <rect x="150" y="105" width="46" height="15" rx="4"/>
+          <rect x="150" y="133" width="46" height="15" rx="4"/>
+        </g>
+        <g fill="#4d565e"><circle cx="159" cy="22.5" r="2"/><circle cx="159" cy="52.5" r="2"/><circle cx="159" cy="82.5" r="2"/><circle cx="159" cy="112.5" r="2"/><circle cx="159" cy="140.5" r="2"/></g>
+      </svg>
+    </div>
+
+    <div class="cover__bottom">
+      <dl class="cover__meta">
+        <div><dt>Operator</dt><dd>CAPRI CASINO</dd></div>
+        <div><dt>Model</dt><dd>Private · Invite-only</dd></div>
+        <div><dt>Seeking</dt><dd>Game aggregation (API)</dd></div>
+        <div><dt>Prepared for</dt><dd><span class="ph">Provider name</span></dd></div>
+      </dl>
+      <div class="cover__doc" style="text-align:left"><span class="ph">yourdomain.com</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ EXECUTIVE SUMMARY ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">01</div>
+    <div class="section-head">
+      <p class="eyebrow">Executive Summary</p>
+      <h2>A private operator that owns its<br/>full stack — and needs your content.</h2>
+      <p class="lead">We are not a public casino and we are not looking for a platform. We have built the operator technology ourselves. What we want from you is one thing, done well: a premium game catalogue via a single seamless-wallet API.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V7l8-4z"/></svg></div>
+        <h3>Invitation only</h3>
+        <p>Access is granted by the operator. Accounts are created and funded by us for a curated, selected user base — not open public sign-up.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg></div>
+        <h3>Proprietary tech</h3>
+        <p>Frontend, backend, wallet, user system, admin, bonus and VIP engines are all in-house. No white-label dependency.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h11M4 12h16M4 17h9"/><circle cx="19" cy="7" r="2"/><circle cx="15" cy="17" r="2"/></svg></div>
+        <h3>API integration</h3>
+        <p>Our seamless-wallet integration layer is already built and tested. We plug your aggregator in behind a clean, versioned contract.</p>
+      </div>
+    </div>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span><strong style="color:var(--ink-2)">Full disclosure.</strong> This document contains no invented metrics, users, revenue, licences or commercial agreements. Where information is pending it is shown as a clearly marked placeholder — <span class="ph">like this</span> — to be completed before sending. Licensing status &amp; jurisdiction: <span class="ph">to be confirmed</span>.</span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ OUR PLATFORM ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">02</div>
+    <div class="section-head">
+      <p class="eyebrow">Our Platform</p>
+      <h2>Everything is ours — except the games.</h2>
+      <p class="lead">The entire operator stack is developed and operated in-house. We are deliberately not pursuing a white-label solution: we already have the platform. Your role is content.</p>
+    </div>
+    <div class="split">
+      <div class="panel panel--own">
+        <span class="cap">Built &amp; operated in-house</span>
+        <h3 style="margin-top:8px">The operator stack</h3>
+        <ul class="checks cols" style="margin-top:16px">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Frontend</b> · player web</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Backend</b> · API core</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Wallet</b> · ledger</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>User system</b> · auth</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Admin</b> · backoffice</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Bonus engine</b> · wagering</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>VIP / rewards</b></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Audit trail</b> · reporting</span></li>
+        </ul>
+        <div class="divider" style="margin:18px 0"></div>
+        <p class="mono" style="font-size:12px;color:var(--muted)">Foundation in place · on roadmap:</p>
+        <div class="tags">
+          <span class="tag">Referral / affiliate</span>
+          <span class="tag">Risk &amp; anti-fraud rules</span>
+        </div>
+      </div>
+      <div class="panel panel--want">
+        <span class="cap">What we integrate from you</span>
+        <h3 style="margin-top:8px">Game content only</h3>
+        <div class="tags" style="margin-top:16px">
+          <span class="tag tag--on">Slots</span>
+          <span class="tag tag--on">Live Casino</span>
+          <span class="tag tag--on">Crash</span>
+          <span class="tag tag--on">Instant Games</span>
+        </div>
+        <div class="divider" style="margin:20px 0"></div>
+        <span class="cap">What we do <em>not</em> need</span>
+        <div class="tags" style="margin-top:14px">
+          <span class="tag tag--dim">Platform</span>
+          <span class="tag tag--dim">Frontend</span>
+          <span class="tag tag--dim">Wallet</span>
+          <span class="tag tag--dim">CRM</span>
+          <span class="tag tag--dim">Backoffice</span>
+          <span class="tag tag--dim">White Label</span>
+        </div>
+        <p style="font-size:13px;margin-top:22px;color:var(--ink-2)">A lean integration for you: no platform migration, no shared UI, no wallet reconciliation on your side. Just content behind a seamless wallet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ ARCHITECTURE ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">03</div>
+    <div class="section-head">
+      <p class="eyebrow">Architecture</p>
+      <h2>One socket for your aggregator.</h2>
+      <p class="lead">Balance and player custody live entirely on our side. The aggregator receives signed debit / credit calls during play — the standard seamless-wallet model. Below, the single point where your API connects.</p>
+    </div>
+    <div class="flow">
+      <div class="node"><span class="node__k">01</span><div class="node__b"><b>Player</b><span>Browser · authenticated session</span></div><span class="node__t">HTTPS · WS</span></div>
+      <div class="flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+      <div class="node"><span class="node__k">02</span><div class="node__b"><b>Frontend</b><span>Next.js · React · real-time UI</span></div><span class="node__t">SSR / SPA</span></div>
+      <div class="flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+      <div class="node"><span class="node__k">03</span><div class="node__b"><b>Backend</b><span>API core · sessions · game launch</span></div><span class="node__t">REST · JWT</span></div>
+      <div class="flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+      <div class="node"><span class="node__k">04</span><div class="node__b"><b>Wallet</b><span>Double-entry ledger · authoritative balance</span></div><span class="node__t">ACID</span></div>
+      <div class="flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+      <div class="node node--hi"><span class="node__k">05</span><div class="node__b"><b>Game Aggregator API</b><span>Your integration · launch, debit, credit, rollback</span></div><span class="node__t mono" style="color:var(--accent)">← you plug in here</span></div>
+      <div class="flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+      <div class="node"><span class="node__k">06</span><div class="node__b"><b>Providers</b><span>Certified studios &amp; RNG on your infrastructure</span></div></div>
+    </div>
+    <div class="providers">
+      <span class="tag">Pragmatic Play</span><span class="tag">Evolution</span><span class="tag">Play'n GO</span>
+      <span class="tag">Spribe</span><span class="tag">Hacksaw Gaming</span><span class="tag">BGaming</span><span class="tag">+ your full catalogue</span>
+    </div>
+    <p class="socket-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Provider studios listed as integration targets — no existing agreement is implied.</p>
+  </section>
+
+  <!-- ══════════════════ TECHNOLOGY ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">04</div>
+    <div class="section-head">
+      <p class="eyebrow">Technology</p>
+      <h2>A modern stack built for<br/>high-volume integrations.</h2>
+      <p class="lead">Type-safe end to end, containerised and cloud-portable. The architecture is a modular core designed to scale horizontally and to extract services as volume grows — not a rewrite waiting to happen.</p>
+    </div>
+    <div class="grid grid-3" style="gap:12px">
+      <div class="card"><h3 style="font-size:15px">Language &amp; runtime</h3><div class="tags" style="margin-top:12px"><span class="tag">Node.js</span><span class="tag">TypeScript</span></div></div>
+      <div class="card"><h3 style="font-size:15px">Frontend</h3><div class="tags" style="margin-top:12px"><span class="tag">Next.js</span><span class="tag">React</span><span class="tag">WebSockets</span></div></div>
+      <div class="card"><h3 style="font-size:15px">Backend</h3><div class="tags" style="margin-top:12px"><span class="tag">REST API</span><span class="tag">JWT</span><span class="tag">Modular core</span></div></div>
+      <div class="card"><h3 style="font-size:15px">Data</h3><div class="tags" style="margin-top:12px"><span class="tag">PostgreSQL</span><span class="tag">Redis</span></div></div>
+      <div class="card"><h3 style="font-size:15px">Delivery</h3><div class="tags" style="margin-top:12px"><span class="tag">Docker</span><span class="tag">Cloud-portable</span><span class="tag">Edge CDN</span></div></div>
+      <div class="card"><h3 style="font-size:15px">Real-time</h3><div class="tags" style="margin-top:12px"><span class="tag">WebSockets</span><span class="tag">Event bus</span></div></div>
+    </div>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>Infrastructure is container-based and portable across major clouds (AWS / GCP) and managed platforms; current hosting and CDN/WAF layer: <span class="ph">to be confirmed</span>.</span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ WALLET ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">05</div>
+    <div class="section-head">
+      <p class="eyebrow">Wallet</p>
+      <h2>A proprietary, auditable wallet.</h2>
+      <p class="lead">Player custody is ours. Every movement is a double-entry accounting record — balance is a consequence of the ledger, never an editable number. This is what makes reconciliation with a provider clean and disputes resolvable.</p>
+    </div>
+    <ul class="checks cols">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>USD balances</b> — integer minor units, never floating point.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Double-entry ledger</b> — append-only, every entry sums to zero.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Auditable transactions</b> — full, immutable history.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Unique transaction IDs</b> — per economic operation.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Rollback support</b> — reversing entries, originals never deleted.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Idempotency</b> — safe retries, no double debit or credit.</span></li>
+    </ul>
+    <div class="table-wrap" style="margin-top:26px">
+      <table>
+        <thead><tr><th>Ledger example — one €10 bet</th><th>Debit</th><th>Credit</th></tr></thead>
+        <tbody>
+          <tr><td class="op mono" style="color:var(--ink-2)">player:cash</td><td class="mono">10.00</td><td></td></tr>
+          <tr><td class="op mono" style="color:var(--ink-2)">house:wagering</td><td></td><td class="mono">10.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--faint);margin-top:12px" class="mono">Balance is recomputable from the ledger at any point — verifiable, not asserted.</p>
+  </section>
+
+  <!-- ══════════════════ SECURITY ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">06</div>
+    <div class="section-head">
+      <p class="eyebrow">Security</p>
+      <h2>Economic integrity by design.</h2>
+      <p class="lead">A casino has two attack surfaces: the web platform and the money. We treat both as first-class. Nothing that touches balance bypasses the wallet, and every provider call is signed and verified before any logic runs.</p>
+    </div>
+    <div class="grid grid-3" style="gap:14px">
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><h3>Authentication</h3><p>Short-lived JWT access tokens with rotating refresh; reuse detection. 2FA (TOTP) for administrators.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4v5c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V7l8-4z"/></svg></div><h3>Callback signing</h3><p>HMAC-signed provider callbacks, verified in constant time before any wallet logic executes.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h4l3 8 4-16 3 8h4"/></svg></div><h3>Rate limiting</h3><p>Per-IP and per-account throttling on authentication; brute-force and abuse protection.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Encrypted at rest</h3><p>Sensitive secrets encrypted (AES-GCM). Secrets injected at runtime, never committed.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><h3>HTTPS &amp; headers</h3><p>TLS everywhere, strict security headers (CSP, HSTS), production secret guard on boot.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div><h3>Logs &amp; audit</h3><p>Immutable audit trail on every sensitive action; structured logs and metrics for monitoring.</p></div>
+    </div>
+    <div class="tags" style="margin-top:18px">
+      <span class="tag tag--on">Backups</span>
+      <span class="tag tag--on">Monitoring</span>
+      <span class="tag tag--on">Audit trail</span>
+      <span class="tag tag--on">Metrics</span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ API READINESS ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">07</div>
+    <div class="section-head">
+      <p class="eyebrow">API Readiness</p>
+      <h2>The integration layer is already built.</h2>
+      <p class="lead">We did not wait for a provider to design our wallet contract. We implemented the full seamless-wallet protocol and hardened it against a simulated provider — including a "chaos mode" that fires duplicates, timeouts and out-of-order events. Integrating your API means writing one adapter to our stable contract.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Operation</th><th>Direction</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="op">Launch game</td><td class="mono" style="color:var(--muted)">operator → provider</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Get balance</td><td class="mono" style="color:var(--muted)">provider → operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Debit (bet)</td><td class="mono" style="color:var(--muted)">provider → operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Credit (win)</td><td class="mono" style="color:var(--muted)">provider → operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Rollback</td><td class="mono" style="color:var(--muted)">provider → operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Session tokens</td><td class="mono" style="color:var(--muted)">operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Signed callbacks / webhooks</td><td class="mono" style="color:var(--muted)">bidirectional</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Idempotency &amp; retries</td><td class="mono" style="color:var(--muted)">operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Transaction validation</td><td class="mono" style="color:var(--muted)">operator</td><td><span class="chip">Implemented</span></td></tr>
+          <tr><td class="op">Provider adapter (your API)</td><td class="mono" style="color:var(--muted)">operator</td><td><span class="chip chip--plan">On integration</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px">Our provider layer is abstracted behind a single port. Swapping the simulated provider for your live aggregator is an adapter change — the wallet, catalogue and player experience do not change.</p>
+  </section>
+
+  <!-- ══════════════════ SCALABILITY ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">08</div>
+    <div class="section-head">
+      <p class="eyebrow">Scalability</p>
+      <h2>From 100 to 100,000 players —<br/>same architecture.</h2>
+      <p class="lead">The application tier is stateless; state lives in PostgreSQL and Redis. Growth is served by adding replicas behind a load balancer, not by re-architecting. The design target below is structural, not a traffic claim.</p>
+    </div>
+    <div class="scale">
+      <div class="scale__col"><div class="scale__bar"><div class="scale__fill" style="height:26px"></div></div><div class="scale__n">100</div><div class="scale__l">pilot</div></div>
+      <div class="scale__col"><div class="scale__bar"><div class="scale__fill" style="height:46px"></div></div><div class="scale__n">1,000</div><div class="scale__l">beta</div></div>
+      <div class="scale__col"><div class="scale__bar"><div class="scale__fill" style="height:70px"></div></div><div class="scale__n">10,000</div><div class="scale__l">launch</div></div>
+      <div class="scale__col"><div class="scale__bar"><div class="scale__fill" style="height:96px"></div></div><div class="scale__n">100,000</div><div class="scale__l">scale</div></div>
+    </div>
+    <div class="grid grid-3" style="margin-top:32px;gap:14px">
+      <div class="card"><h3 style="font-size:15px">Stateless tier</h3><p>Horizontal scaling — add API replicas behind a balancer; no sticky state.</p></div>
+      <div class="card"><h3 style="font-size:15px">Data layer</h3><p>PostgreSQL with read replicas; Redis for cache, pub/sub and real-time fan-out.</p></div>
+      <div class="card"><h3 style="font-size:15px">Service extraction</h3><p>Module boundaries let the real-time / provider engine become its own service under load.</p></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ WHAT WE'RE LOOKING FOR ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">09</div>
+    <div class="section-head">
+      <p class="eyebrow">What We're Looking For</p>
+      <h2>A content partnership — nothing more, nothing less.</h2>
+      <p class="lead">We are explicit about scope so your team can qualify us fast. We want one integration: your game aggregation. We are not evaluating platforms.</p>
+    </div>
+    <div class="split">
+      <div class="panel panel--want">
+        <span class="cap">We want</span>
+        <ul class="checks" style="margin-top:16px">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Game aggregation</b> via a single API</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Slots</b> — full studio catalogue</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Live Casino</b></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Crash</b> games</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg><span><b>Instant games</b></span></li>
+        </ul>
+      </div>
+      <div class="panel panel--own">
+        <span class="cap">We do not need</span>
+        <div class="tags" style="margin-top:18px;gap:9px">
+          <span class="tag tag--dim">Full platform</span>
+          <span class="tag tag--dim">Frontend</span>
+          <span class="tag tag--dim">Wallet</span>
+          <span class="tag tag--dim">CRM</span>
+          <span class="tag tag--dim">Backoffice</span>
+          <span class="tag tag--dim">Player management</span>
+          <span class="tag tag--dim">Payments / PSP</span>
+          <span class="tag tag--dim">White label</span>
+        </div>
+        <p style="font-size:13px;margin-top:24px;color:var(--ink-2)">This makes us a low-overhead partner: a single technical integration, one commercial contract, one reconciliation surface.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ COMMERCIAL MODEL ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">10</div>
+    <div class="section-head">
+      <p class="eyebrow">Commercial Model</p>
+      <h2>Flexible terms, long-term intent.</h2>
+      <p class="lead">We are open to the standard structures of the industry and will work to whatever your team prefers. Our interest is a durable partnership, not a one-off.</p>
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><h3>Revenue Share (GGR %)</h3><p>A percentage of gross gaming revenue on your content — the industry-standard model.</p></div>
+      <div class="card"><h3>API / Integration Fee</h3><p>A defined fee structure for access and integration, where preferred.</p></div>
+      <div class="card"><h3>Hybrid</h3><p>A blend of revenue share with a fee or floor, structured to fit both sides.</p></div>
+      <div class="card"><h3>Minimum Guarantees</h3><p>Open to discussing minimum guarantees as the relationship establishes.</p></div>
+    </div>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>Specific rates, revenue-share percentages and minimums are <span class="ph">to be negotiated</span>. No commercial terms are asserted in this document.</span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ ROADMAP ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">11</div>
+    <div class="section-head">
+      <p class="eyebrow">Roadmap</p>
+      <h2>Where we are, and where we're going.</h2>
+      <p class="lead">The platform is built and deployed. Content integration is the gating step before onboarding our selected player base. Marketing and regional expansion follow.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl"><div class="tl__rail"><div class="tl__dot tl__dot--done"></div><div class="tl__line"></div></div><div class="tl__body"><div class="tl__k">Phase 01</div><div class="tl__t">MVP — proprietary platform <span class="tl__status st-done">Done</span></div><p class="tl__d">Full operator stack built &amp; deployed: wallet, auth, admin, bonuses, VIP, real-time, security.</p></div></div>
+      <div class="tl"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__line"></div></div><div class="tl__body"><div class="tl__k">Phase 02</div><div class="tl__t">Provider integration <span class="tl__status st-now">Current</span></div><p class="tl__d">Integrate a game aggregator via API — the purpose of this proposal.</p></div></div>
+      <div class="tl"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__line"></div></div><div class="tl__body"><div class="tl__k">Phase 03</div><div class="tl__t">Beta <span class="tl__status st-next">Next</span></div><p class="tl__d">Closed beta with a curated, invited group of players.</p></div></div>
+      <div class="tl"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__line"></div></div><div class="tl__body"><div class="tl__k">Phase 04</div><div class="tl__t">Launch</div><p class="tl__d">Full private launch to the selected user base.</p></div></div>
+      <div class="tl"><div class="tl__rail"><div class="tl__dot"></div><div class="tl__line"></div></div><div class="tl__body"><div class="tl__k">Phase 05</div><div class="tl__t">Marketing &amp; LATAM expansion</div><p class="tl__d">Growth within target Latin-American markets.</p></div></div>
+      <div class="tl"><div class="tl__rail"><div class="tl__dot"></div></div><div class="tl__body" style="padding-bottom:0"><div class="tl__k">Phase 06</div><div class="tl__t">Global expansion</div><p class="tl__d">Broader international reach as licensing and operations mature.</p></div></div>
+    </div>
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>Timeline reflects current build status. Dates and licensing milestones per market are <span class="ph">to be confirmed</span>.</span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ CONTACT ══════════════════ -->
+  <section class="page">
+    <div class="page__brand">CAPRI CASINO</div><div class="page__num">12</div>
+    <div class="section-head">
+      <p class="eyebrow">Contact</p>
+      <h2>Let's open the integration.</h2>
+      <p class="lead">We are ready to move quickly into technical scoping. Reach out through any channel below and we will share integration documentation and next steps.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-row"><span class="k">Company</span><span class="v"><span class="ph">Legal entity name</span></span></div>
+      <div class="contact-row"><span class="k">Website</span><span class="v"><span class="ph">yourdomain.com</span></span></div>
+      <div class="contact-row"><span class="k">Email</span><span class="v"><span class="ph">partnerships@yourdomain.com</span></span></div>
+      <div class="contact-row"><span class="k">Telegram</span><span class="v"><span class="ph">@handle</span></span></div>
+      <div class="contact-row"><span class="k">WhatsApp</span><span class="v"><span class="ph">+00 000 000 000</span></span></div>
+      <div class="contact-row"><span class="k">LinkedIn</span><span class="v"><span class="ph">/company/…</span></span></div>
+    </div>
+    <div style="margin-top:40px;padding-top:26px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px">
+      <div class="brandmark">
+        <svg width="34" height="34" viewBox="0 0 42 42" fill="none" aria-hidden="true">
+          <rect x="7" y="7" width="28" height="28" rx="7" transform="rotate(45 21 21)" stroke="#3ECF8E" stroke-width="1.5"/>
+          <text x="21" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#3ECF8E">C</text>
+        </svg>
+        <span class="brandmark__word" style="font-size:13px">CAPRI<small>CASINO</small></span>
+      </div>
+      <p style="font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:0;text-align:right;letter-spacing:0.06em">Private Crypto Gaming Platform<br/>Confidential — for the addressed provider only</p>
+    </div>
+  </section>
+
+</div>
