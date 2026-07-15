@@ -2,7 +2,7 @@
 
 // Club VIP del jugador: nivel actual, progreso al siguiente y la tabla de niveles.
 import { useEffect, useState } from "react";
-import { api, type VipStatus } from "@/lib/api";
+import { api, type VipStatus, type BonusRow } from "@/lib/api";
 
 const fmt = (cents: number) => new Intl.NumberFormat("es-ES").format(Math.floor(cents / 100));
 
@@ -15,17 +15,40 @@ const tierColor: Record<string, string> = {
 
 export function VipModal({ onClose }: { onClose: () => void }) {
   const [vip, setVip] = useState<VipStatus | null>(null);
+  const [bonuses, setBonuses] = useState<BonusRow[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     api.vipStatus().then(setVip).catch(() => setError("No se pudo cargar tu estado VIP."));
+    api.bonuses().then(setBonuses).catch(() => undefined);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Club VIP" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Club VIP y recompensas" onClick={onClose}>
       <div className="glass max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
-        <h2 className="font-display text-2xl font-semibold text-gold-bright">Club VIP</h2>
+        <h2 className="font-display text-2xl font-semibold text-gold-bright">Club VIP y recompensas</h2>
         {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+
+        {/* Bonos activos con progreso de wagering (transparencia = confianza) */}
+        {bonuses.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <p className="text-[0.65rem] uppercase tracking-wider text-ink-mute">Tus bonos activos</p>
+            {bonuses.map((b) => (
+              <div key={b.id} className="rounded-xl border border-win/30 bg-win/5 p-4">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-semibold text-win">Bono de {fmt(b.amount)} USD</span>
+                  <span className="text-xs text-ink-mute">{b.progressPct}%</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-night">
+                  <div className="h-full rounded-full bg-win" style={{ width: `${b.progressPct}%` }} />
+                </div>
+                <p className="mt-1.5 text-[0.7rem] text-ink-mute">
+                  Apostado {fmt(b.wageringProgress)} de {fmt(b.wageringTarget)} USD para liberarlo a tu saldo.
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {vip && (
           <>

@@ -129,6 +129,14 @@ export function Lobby() {
 
           <div className="flex shrink-0 items-center gap-2">
             <BalancePill cash={player.cash} />
+            {player.bonus > 0 && (
+              <div
+                className="hidden items-center gap-1.5 rounded-full border border-win/40 bg-win/10 px-3 py-2 text-sm font-semibold text-win sm:flex"
+                title="Saldo de bono (se libera al cumplir el wagering)"
+              >
+                {formatFun(player.bonus)} <span className="text-[0.6rem] font-bold">BONO</span>
+              </div>
+            )}
             <NotificationsBell />
             <button
               type="button"

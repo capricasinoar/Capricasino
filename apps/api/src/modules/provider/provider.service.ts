@@ -7,6 +7,7 @@ import type { ProviderCallback, ProviderCallbackResponse } from "@capri/contract
 import { PrismaService } from "../prisma/prisma.service";
 import { WalletService, WalletError } from "../wallet/wallet.service";
 import { ResponsibleService, LimitReachedError } from "../responsible/responsible.service";
+import { BonusService } from "../bonus/bonus.service";
 
 const PROVIDER_CODE = "sim";
 
@@ -16,6 +17,7 @@ export class ProviderService {
     private readonly prisma: PrismaService,
     private readonly wallet: WalletService,
     private readonly rg: ResponsibleService,
+    private readonly bonus: BonusService,
   ) {}
 
   async handle(cb: ProviderCallback): Promise<ProviderCallbackResponse> {
@@ -53,6 +55,8 @@ export class ProviderService {
               where: { id: round.id },
               data: { totalBet: { increment: BigInt(cb.amount) } },
             });
+            // Avanza el wagering de los bonos activos (libera a cash si se cumple).
+            await this.bonus.recordWager(userId, BigInt(cb.amount)).catch(() => undefined);
           }
           return { status: "OK", balance: Number(res.balance), transactionId: cb.transactionId };
         }

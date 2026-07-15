@@ -8,6 +8,7 @@ import { apiError } from "../../shared/api-error";
 import { PaymentsService } from "../payments/payments.service";
 import { WalletError } from "../wallet/wallet.service";
 import { ResponsibleService } from "../responsible/responsible.service";
+import { BonusService } from "../bonus/bonus.service";
 import { AuthService } from "../auth/auth.service";
 import { AdminAuthService, type AdminJwtPayload } from "./admin-auth.service";
 import { AdminAuthGuard, CurrentAdmin, Roles } from "./admin-auth.guard";
@@ -35,6 +36,10 @@ const CreateUserBody = z.object({
   password: z.string().min(8).max(128),
   initialBalance: z.number().int().nonnegative().optional(), // USD en centavos
 });
+const GrantBonusBody = z.object({
+  amount: z.number().int().positive(), // USD en centavos
+  wageringMultiplier: z.number().int().min(0).max(100),
+});
 
 @Controller("admin/v1")
 export class AdminController {
@@ -44,6 +49,7 @@ export class AdminController {
     private readonly payments: PaymentsService,
     private readonly reports: ReportsService,
     private readonly rg: ResponsibleService,
+    private readonly bonus: BonusService,
     private readonly userAuth: AuthService,
   ) {}
 
@@ -210,5 +216,23 @@ export class AdminController {
   async liftExclusion(@Param("id") userId: string) {
     await this.rg.liftExclusion(userId);
     return { ok: true };
+  }
+
+  // Otorgar bono con wagering (finance / super_admin).
+  @Post("users/:id/grant-bonus")
+  @UseGuards(AdminAuthGuard)
+  @Roles("finance")
+  async grantBonus(
+    @Param("id") userId: string,
+    @Body(new ZodValidationPipe(GrantBonusBody)) body: z.infer<typeof GrantBonusBody>,
+    @CurrentAdmin() admin: AdminJwtPayload,
+  ) {
+    const grant = await this.bonus.grant({
+      userId,
+      amount: BigInt(body.amount),
+      wageringMultiplier: body.wageringMultiplier,
+      adminUserId: admin.sub,
+    });
+    return { id: grant.id, amount: Number(grant.amount), wageringTarget: Number(grant.wageringTarget) };
   }
 }

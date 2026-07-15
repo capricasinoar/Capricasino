@@ -146,6 +146,11 @@ export const adminApi = {
   exclude: (id: string, days: number | null, reason?: string) =>
     req<{ ok: boolean }>(`/users/${id}/exclude`, { method: "POST", body: JSON.stringify({ days, reason }) }),
   liftExclusion: (id: string) => req<{ ok: boolean }>(`/users/${id}/lift-exclusion`, { method: "POST" }),
+  grantBonus: (id: string, amount: number, wageringMultiplier: number) =>
+    req<{ id: string; amount: number; wageringTarget: number }>(`/users/${id}/grant-bonus`, {
+      method: "POST",
+      body: JSON.stringify({ amount, wageringMultiplier }),
+    }),
 };
 
 // Descarga del CSV de actividad (usa el token en un blob).

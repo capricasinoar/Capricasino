@@ -75,6 +75,9 @@ export const api = {
   // Club VIP
   vipStatus: () => request<VipStatus>("/vip/status"),
 
+  // Bonos activos del jugador
+  bonuses: () => request<BonusRow[]>("/bonuses"),
+
   // Juego responsable (del propio jugador)
   rgStatus: () => request<RgStatus>("/responsible-gaming/status"),
   rgSetLimit: (kind: RgLimitKind, value: number) =>
@@ -108,6 +111,15 @@ export interface NotificationsPage {
   items: NotificationRow[];
   nextCursor: string | null;
   unread: number;
+}
+
+export interface BonusRow {
+  id: string;
+  amount: number;
+  wageringTarget: number;
+  wageringProgress: number;
+  progressPct: number;
+  createdAt: string;
 }
 
 export interface VipStatus {

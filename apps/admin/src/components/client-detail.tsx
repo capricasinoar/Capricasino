@@ -60,7 +60,10 @@ export function ClientDetail({ id, role, onBack }: { id: string; role: string; o
           </div>
 
           {canAdjust ? (
-            <AdjustForm userId={id} onDone={load} />
+            <>
+              <AdjustForm userId={id} onDone={load} />
+              <GrantBonusForm userId={id} onDone={load} />
+            </>
           ) : (
             <p className="rounded-xl border border-line bg-card p-4 text-xs text-ink-mute">
               Tu rol ({role}) no permite modificar saldo. Solo finance o super_admin.
@@ -183,6 +186,59 @@ function ResponsibleBlock({ userId, status, onChange }: { userId: string; status
         </div>
       )}
     </div>
+  );
+}
+
+function GrantBonusForm({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const [amount, setAmount] = useState("");
+  const [mult, setMult] = useState("30");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    const amt = Number(amount);
+    const m = Number(mult);
+    if (!Number.isFinite(amt) || amt <= 0) return setMsg({ ok: false, text: "Monto inválido" });
+    if (!Number.isInteger(m) || m < 0) return setMsg({ ok: false, text: "Multiplicador inválido" });
+    setBusy(true);
+    try {
+      const r = await adminApi.grantBonus(userId, Math.round(amt * 100), m);
+      setMsg({ ok: true, text: `Bono de ${fun(r.amount)} otorgado (wagering ${fun(r.wageringTarget)}).` });
+      setAmount("");
+      onDone();
+    } catch (err) {
+      setMsg({ ok: false, text: err instanceof AdminApiError ? err.message : "No se pudo otorgar el bono." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-xl border border-line bg-card p-5">
+      <h2 className="text-sm font-semibold">Otorgar bono</h2>
+      <p className="mt-1 text-xs text-ink-mute">Va al saldo de bono; se libera a cash cuando el cliente apueste el wagering.</p>
+      <div className="mt-3 flex gap-2">
+        <div className="flex-1">
+          <label className="mb-1 block text-[0.6rem] uppercase tracking-wider text-ink-mute">Monto (USD)</label>
+          <input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="100"
+            className="w-full rounded-lg border border-line bg-night px-3 py-2 text-sm focus:border-gold/60 focus:outline-none" />
+        </div>
+        <div className="w-24">
+          <label className="mb-1 block text-[0.6rem] uppercase tracking-wider text-ink-mute">Wagering</label>
+          <div className="flex items-center gap-1">
+            <input type="number" min="0" step="1" value={mult} onChange={(e) => setMult(e.target.value)}
+              className="w-full rounded-lg border border-line bg-night px-3 py-2 text-sm focus:border-gold/60 focus:outline-none" />
+            <span className="text-sm text-ink-mute">×</span>
+          </div>
+        </div>
+      </div>
+      {msg && <p className={`mt-3 text-sm ${msg.ok ? "text-win" : "text-danger"}`}>{msg.text}</p>}
+      <button type="submit" disabled={busy} className="mt-3 w-full cursor-pointer rounded-full border border-win/50 py-2.5 text-sm font-medium text-win transition-colors hover:bg-win/10 disabled:opacity-50">
+        {busy ? "Otorgando…" : "Otorgar bono"}
+      </button>
+    </form>
   );
 }
 

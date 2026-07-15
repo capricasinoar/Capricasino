@@ -45,8 +45,10 @@ interface LedgerLeg {
 
 const accounts = {
   playerCash: (userId: string) => `player:${userId}:cash`,
+  playerBonus: (userId: string) => `player:${userId}:bonus`,
   houseWagering: "house:wagering",
   houseDeposits: "house:deposits",
+  houseBonusLiability: "house:bonus_liability",
 };
 
 // Reintento ante deadlock (40P01) o conflicto de serialización — Cap. 5.3-D.
@@ -176,6 +178,99 @@ export class WalletService {
       meta: { reverses: original.id, reversesProviderTxId: p.originalProviderTxId },
       markReversed: original.id,
     });
+  }
+
+  /* ── Bono (bucket separado del cash) ───────────────────────────── */
+
+  /** Otorga saldo de bono (no retirable hasta cumplir el wagering). Idempotente. */
+  grantBonus(p: { userId: string; amount: bigint; providerCode: string; providerTxId: string; meta?: Prisma.InputJsonValue }) {
+    return this.applyBonus({
+      ...p,
+      type: "bonus_grant",
+      bonusDelta: p.amount,
+      cashDelta: 0n,
+      legs: [
+        { account: accounts.houseBonusLiability, direction: "debit", amount: p.amount },
+        { account: accounts.playerBonus(p.userId), direction: "credit", amount: p.amount },
+      ],
+    });
+  }
+
+  /** Libera bono a cash (cumplido el wagering): bono → cash. Idempotente. */
+  releaseBonus(p: { userId: string; amount: bigint; providerCode: string; providerTxId: string; meta?: Prisma.InputJsonValue }) {
+    return this.applyBonus({
+      ...p,
+      type: "adjustment",
+      bonusDelta: -p.amount,
+      cashDelta: p.amount,
+      legs: [
+        { account: accounts.playerBonus(p.userId), direction: "debit", amount: p.amount },
+        { account: accounts.playerCash(p.userId), direction: "credit", amount: p.amount },
+      ],
+    });
+  }
+
+  // Núcleo atómico para operaciones que tocan el bucket bonus (± bonus y/o ±
+  // cash). Mismo patrón que apply(): idempotencia por UNIQUE + FOR UPDATE +
+  // update condicional + asientos, todo en una transacción. Los CHECK de la DB
+  // (bonus>=0, cash>=0) son la última defensa.
+  private async applyBonus(p: {
+    userId: string;
+    amount: bigint;
+    providerCode: string;
+    providerTxId: string;
+    type: TransactionType;
+    bonusDelta: bigint;
+    cashDelta: bigint;
+    legs: LedgerLeg[];
+    meta?: Prisma.InputJsonValue;
+  }): Promise<WalletOpResult> {
+    if (p.amount <= 0n) throw new Error("amount debe ser > 0");
+    const debits = p.legs.filter((l) => l.direction === "debit").reduce((a, l) => a + l.amount, 0n);
+    const credits = p.legs.filter((l) => l.direction === "credit").reduce((a, l) => a + l.amount, 0n);
+    if (debits !== credits) throw new Error(`Asientos descuadrados: ${debits} vs ${credits}`);
+
+    const provider = await this.providerByCode(p.providerCode);
+    try {
+      const result = await withRetry(() =>
+        this.prisma.$transaction(async (tx) => {
+          const created = await tx.transaction.create({
+            data: { userId: p.userId, type: p.type, providerId: provider.id, providerTxId: p.providerTxId, amount: p.amount, meta: p.meta },
+          });
+          const locked = await tx.$queryRaw<{ cash_balance: bigint; bonus_balance: bigint }[]>`
+            SELECT cash_balance, bonus_balance FROM wallets WHERE user_id = ${p.userId}::uuid FOR UPDATE`;
+          if (locked.length === 0) throw new WalletError("WALLET_NOT_FOUND");
+          const newCash = locked[0].cash_balance + p.cashDelta;
+          const newBonus = locked[0].bonus_balance + p.bonusDelta;
+          if (newBonus < 0n) throw new WalletError("INSUFFICIENT_FUNDS", locked[0].bonus_balance);
+          const affected = await tx.$executeRaw`
+            UPDATE wallets SET cash_balance = cash_balance + ${p.cashDelta}, bonus_balance = bonus_balance + ${p.bonusDelta},
+                   version = version + 1, updated_at = now()
+            WHERE user_id = ${p.userId}::uuid AND cash_balance + ${p.cashDelta} >= 0 AND bonus_balance + ${p.bonusDelta} >= 0`;
+          if (affected === 0) throw new WalletError("INSUFFICIENT_FUNDS", locked[0].bonus_balance);
+          await tx.ledgerEntry.createMany({
+            data: p.legs.map((l) => ({ transactionId: created.id, account: l.account, direction: l.direction, amount: l.amount })),
+          });
+          await tx.transaction.update({ where: { id: created.id }, data: { balanceAfter: newCash } });
+          return { transactionId: created.id, providerTxId: p.providerTxId, balance: newCash, replayed: false };
+        }),
+      );
+      this.events?.emit(BALANCE_CHANGED, { userId: p.userId, cash: result.balance } satisfies BalanceChangedEvent);
+      return result;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        for (let i = 0; i < 5; i++) {
+          const prev = await this.prisma.transaction.findUnique({
+            where: { providerId_providerTxId: { providerId: provider.id, providerTxId: p.providerTxId } },
+          });
+          if (prev?.balanceAfter != null) {
+            return { transactionId: prev.id, providerTxId: p.providerTxId, balance: prev.balanceAfter, replayed: true };
+          }
+          await new Promise((r) => setTimeout(r, 25 * (i + 1)));
+        }
+      }
+      throw e;
+    }
   }
 
   /* ── Núcleo atómico ────────────────────────────────────────────── */

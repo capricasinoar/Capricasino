@@ -401,6 +401,7 @@ model BonusGrant {
   wageringTarget   BigInt        @map("wagering_target")
   wageringProgress BigInt        @default(0) @map("wagering_progress")
   status           GrantStatus   @default(active)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz()
   expiresAt        DateTime?     @map("expires_at") @db.Timestamptz()
 
   @@index([userId])
