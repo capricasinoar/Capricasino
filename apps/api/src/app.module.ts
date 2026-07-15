@@ -1,8 +1,10 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { HealthModule } from "./modules/health/health.module";
+import { MetricsModule } from "./modules/metrics/metrics.module";
+import { MetricsInterceptor } from "./modules/metrics/metrics.interceptor";
 import { PrismaModule } from "./modules/prisma/prisma.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { RealtimeModule } from "./modules/realtime/realtime.module";
@@ -23,6 +25,7 @@ import { AdminModule } from "./modules/admin/admin.module";
     // Rate limiting global moderado (Cap. 8.6); login/registro llevan tope
     // estricto propio (@Throttle) y el callback del proveedor se exime.
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 120 }]),
+    MetricsModule,
     PrismaModule,
     HealthModule,
     AuthModule,
@@ -35,6 +38,9 @@ import { AdminModule } from "./modules/admin/admin.module";
     RealtimeModule,
     AdminModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
+  ],
 })
 export class AppModule {}

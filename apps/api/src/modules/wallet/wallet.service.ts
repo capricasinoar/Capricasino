@@ -6,6 +6,7 @@ import { Injectable, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Prisma, TransactionType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { MetricsService } from "../metrics/metrics.service";
 
 // Evento de dominio que dispara el push de saldo por WebSocket (Cap. 9.3).
 export const BALANCE_CHANGED = "balance.changed";
@@ -67,10 +68,11 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 
 @Injectable()
 export class WalletService {
-  // events es opcional: en tests se instancia `new WalletService(prisma)` sin bus.
+  // events/metrics opcionales: en tests se instancia `new WalletService(prisma)`.
   constructor(
     private readonly prisma: PrismaService,
     @Optional() private readonly events?: EventEmitter2,
+    @Optional() private readonly metrics?: MetricsService,
   ) {}
 
   async getBalance(userId: string): Promise<{ cash: bigint; bonus: bigint; total: bigint }> {
@@ -253,6 +255,7 @@ export class WalletService {
       // El WS solo AVISA; la verdad es la DB (TRAMPA #11), por eso emitimos
       // después del COMMIT, nunca dentro de la transacción.
       this.events?.emit(BALANCE_CHANGED, { userId: p.userId, cash: result.balance } satisfies BalanceChangedEvent);
+      this.metrics?.recordWalletOp(p.type, p.amount);
       return result;
     } catch (e) {
       // Reintento del proveedor: misma UNIQUE → devolver EXACTAMENTE el resultado

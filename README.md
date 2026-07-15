@@ -51,7 +51,7 @@ docker compose -f infra/docker/docker-compose.yml up
 - ✅ **Hardening de seguridad (Cap. 8):** 2FA (TOTP) para el admin con secreto cifrado (AES-GCM), rate limiting (login/registro estrictos, callbacks eximidos), cabeceras de seguridad (CSP/HSTS/anti-clickjacking vía helmet + headers en Next), y guardia que aborta el arranque en producción con secretos de desarrollo. 7 tests nuevos (45 total)
 - ✅ **Historial + notificaciones (jugador):** historial de movimientos filtrable (todos / cargas y retiros / apuestas) y centro de notificaciones con campana + badge de no leídas, push en vivo por WebSocket (aviso al cargar/retirar saldo)
 - ✅ **Web privada + moneda USD:** la web abre en pantalla de login; sin registro público — solo el operador crea clientes (panel admin → "Nuevo cliente", con saldo inicial opcional). Toda la interfaz muestra **USD**
-- ⏳ Siguiente — despliegue y observabilidad (Docker completo, métricas, deploy)
+- ✅ **Despliegue + observabilidad:** `/metrics` Prometheus (HTTP, latencia, ops de wallet, sistema), `/api/v1/ready` con chequeo de Postgres, interceptor de métricas/logging. Dockerfiles con migraciones al arrancar, `vercel.json` para web/admin y guía [`DEPLOY.md`](DEPLOY.md) (Vercel + host de contenedores + Neon)
 
 ## Acceso al panel de administración
 

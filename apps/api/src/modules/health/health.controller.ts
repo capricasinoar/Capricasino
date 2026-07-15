@@ -1,16 +1,30 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, HttpCode } from "@nestjs/common";
+import { SkipThrottle } from "@nestjs/throttler";
+import { PrismaService } from "../prisma/prisma.service";
 
+@SkipThrottle()
 @Controller()
 export class HealthController {
-  // Liveness: el proceso responde.
+  constructor(private readonly prisma: PrismaService) {}
+
+  // Liveness: el proceso responde (no toca dependencias).
   @Get("health")
   health() {
     return { status: "ok", service: "capri-api", ts: new Date().toISOString() };
   }
 
-  // Readiness: cuando existan, aquí se comprueban Postgres y Redis (Cap. 13.7).
+  // Readiness: ¿puede servir tráfico? Comprueba Postgres (Cap. 13.7).
+  // 503 si la DB no responde → el balanceador no le manda tráfico.
   @Get("ready")
-  ready() {
-    return { status: "ok", checks: { postgres: "pending(S2)", redis: "pending(S2)" } };
+  @HttpCode(200)
+  async ready() {
+    let postgres = "ok";
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+    } catch {
+      postgres = "down";
+    }
+    const ready = postgres === "ok";
+    return { status: ready ? "ok" : "degraded", checks: { postgres } };
   }
 }

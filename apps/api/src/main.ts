@@ -51,6 +51,7 @@ export async function createApp(): Promise<NestFastifyApplication> {
     exclude: [
       { path: "provider/v1/callback", method: RequestMethod.ALL },
       { path: "admin/v1/(.*)", method: RequestMethod.ALL },
+      { path: "metrics", method: RequestMethod.GET }, // scrape de Prometheus
     ],
   });
   app.enableCors({

@@ -11,6 +11,7 @@ Cada módulo es una rebanada vertical (controller · service · dto · ports · 
 | `games` | 4 ✅ | Catálogo agnóstico servido desde DB (`GET /games`, `/games/categories`) con forma de agregador + `playable` derivado del `ProviderRegistry`. `launch` despacha al adapter por código de proveedor. Pendiente: favoritos, recientes |
 | `realtime` | 6 ✅ | WS Gateway (Socket.IO) con auth JWT en handshake, saldo en vivo (`balance.changed`) y notificaciones (`notification.created`), rooms `user:{id}`, resync REST al reconectar. Pendiente: Redis adapter multi-instancia |
 | `notifications` | 8 ✅ | Centro de notificaciones: `GET /notifications`, marcar leídas; creadas por payments (carga/retiro) y auth (bienvenida); push en vivo por WS |
+| `metrics` | 11 ✅ | `/metrics` Prometheus (HTTP, latencia, ops de wallet, GGR, sistema) + interceptor global; `/api/v1/ready` chequea Postgres |
 | `bonus` | 7 | Campañas, wagering con contribución por juego, free spins, VIP, cashback |
 | `payments` | 8 (parcial ✅) | 🧩 Cargas/retiradas MANUALES del operador con triple registro (ledger + recibo + auditoría) vía CLI `pnpm admin`. Pendiente: endpoints jugador + cola de aprobación (S8-S9) |
 | `kyc` | 8 | 🧩 Stub (tablas ya presentes en el esquema) |
