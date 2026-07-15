@@ -7,7 +7,8 @@ import { getSession, playDice, rotateSeed, setClientSeed } from "./dice";
 import { callOperator } from "./operator-client";
 import { dicePage } from "./dice-page";
 
-const PORT = Number(process.env.SIM_PORT ?? 4100);
+// PORT lo inyecta el host (Railway); SIM_PORT es el fallback local.
+const PORT = Number(process.env.PORT ?? process.env.SIM_PORT ?? 4100);
 const PUBLIC_URL = process.env.SIM_PUBLIC_URL ?? `http://localhost:${PORT}`;
 
 const app = Fastify({ logger: false });
